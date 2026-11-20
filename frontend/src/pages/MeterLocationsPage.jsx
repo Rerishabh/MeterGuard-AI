@@ -84,13 +84,13 @@ export default function MeterLocationsPage({
             <MapPin size={28} color="#22C55E" />
             <h1>Meter GIS Locations</h1>
           </div>
-          <p>Spatial distribution grid mapping & physical tamper surveillance</p>
+          <p>Spatial distribution grid mapping & physical tamper surveillance (Demonstration / Simulated GIS Coordinates)</p>
         </div>
 
         <div className="topbar-right">
-          <div className="live-badge">
-            <span className="live-dot"></span>
-            GPS SYNCED
+          <div className="live-badge" style={{ background: "rgba(139, 94, 60, 0.3)", border: "1px solid var(--brown)", color: "var(--cream)" }}>
+            <span className="live-dot" style={{ background: "var(--cream)" }}></span>
+            DEMO GIS GRID
           </div>
 
           <div className="time-display">
@@ -201,10 +201,13 @@ export default function MeterLocationsPage({
                         <strong>Meter {item.meter_id}</strong>
                         <span>Status: {getStatusText(item)}</span>
                         {item.location?.location_name && (
-                          <small>Zone: {item.location.location_name}</small>
+                          <small>Zone: {item.location.location_name} (Demo)</small>
                         )}
                         <small>Lat: {itemLocation.latitude.toFixed(4)}</small>
                         <small>Lng: {itemLocation.longitude.toFixed(4)}</small>
+                        <small style={{ color: "#F3E4C9", marginTop: "2px", display: "block" }}>
+                          Demo GIS Testbed
+                        </small>
                         <small>{item.online !== false ? "● Online" : "● Offline"}</small>
                       </div>
                     </Popup>
@@ -301,7 +304,7 @@ export default function MeterLocationsPage({
       {/* FOOTER */}
       <footer>
         <span>MeterGuard AI • Spatial GIS Mapping</span>
-        <span>OpenStreetMap Leaflet Integration • Verified Coordinates Only</span>
+        <span>OpenStreetMap Leaflet Integration • Demonstration Grid Coordinates</span>
       </footer>
     </main>
   );

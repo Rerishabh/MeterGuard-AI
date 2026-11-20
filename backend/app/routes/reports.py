@@ -367,6 +367,7 @@ def simulate_tampering(payload: SimulateTamperRequest):
             "meter_id": meter_id,
             "scenario": scenario,
             "scenario_name": sim["scenario_name"],
+            "sequence_id": seq_record.id,
             "is_simulated": True,
             "simulated_at": sim["simulated_at"],
             "sequence_length": 30,
