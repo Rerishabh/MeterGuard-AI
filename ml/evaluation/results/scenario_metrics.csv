@@ -1,0 +1,13 @@
+Stream,Scenario,Total Samples,ISO Correct,ISO Missed,ISO Detection Rate,LSTM Correct,LSTM Missed,LSTM Detection Rate
+Daily,abnormally_low_night,14,0,14,0.0,3,11,0.2143
+Daily,consumption_spike,9,1,8,0.1111,7,2,0.7778
+Daily,flatline,8,1,7,0.125,2,6,0.25
+Daily,inversion,8,0,8,0.0,1,7,0.125
+Daily,normal,152,152,0,1.0,152,0,1.0
+Daily,sudden_drop,9,0,9,0.0,2,7,0.2222
+Hourly,abnormally_low_night,10,N/A,N/A,N/A,3,7,0.3
+Hourly,consumption_spike,11,N/A,N/A,N/A,6,5,0.5455
+Hourly,flatline,10,N/A,N/A,N/A,0,10,0.0
+Hourly,inversion,14,N/A,N/A,N/A,3,11,0.2143
+Hourly,normal,195,N/A,N/A,N/A,176,19,0.9026
+Hourly,sudden_drop,10,N/A,N/A,N/A,2,8,0.2

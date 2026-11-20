@@ -1,0 +1,57 @@
+# Python virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Python cache & bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+*$py.class
+
+# Node dependencies
+node_modules/
+frontend/node_modules/
+
+# Production build outputs
+dist/
+build/
+frontend/dist/
+frontend/build/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Secret directories and credentials
+secrets/
+credentials/
+credentials.json
+service-account*.json
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Temporary files and logs
+*.tmp
+*.log
+*.bak
+*.swp
+
+# IDE & Editor configuration
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini

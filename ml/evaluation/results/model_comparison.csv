@@ -1,0 +1,4 @@
+Model,Input Granularity,Total Samples,TP,FP,TN,FN,Accuracy,Precision,Recall,F1-Score,ROC-AUC,FPR
+Existing Isolation Forest,Daily (30-day 7 statistical features),200,2,0,152,46,0.77,1.0,0.0417,0.08,0.7618,0.0
+Daily LSTM Autoencoder,Daily (30 timesteps sequential),200,15,0,152,33,0.835,1.0,0.3125,0.4762,0.8817,0.0
+Hourly LSTM Autoencoder,Hourly (24 timesteps sequential),250,14,19,176,41,0.76,0.4242,0.2545,0.3182,0.5808,0.0974

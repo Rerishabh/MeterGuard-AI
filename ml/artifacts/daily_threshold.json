@@ -1,0 +1,19 @@
+{
+  "model_type": "LSTM_Autoencoder",
+  "sequence_type": "daily",
+  "sequence_length": 30,
+  "threshold_95": 0.013009,
+  "threshold_99": 0.014284,
+  "active_threshold": "threshold_95",
+  "active_threshold_value": 0.013009,
+  "validation_samples": 123,
+  "mean_val_reconstruction_error": 0.00295,
+  "std_val_reconstruction_error": 0.003751,
+  "min_val_reconstruction_error": 0.000324,
+  "max_val_reconstruction_error": 0.0145,
+  "final_train_loss": 0.004369,
+  "final_val_loss": 0.002953,
+  "epochs_completed": 30,
+  "training_duration_seconds": 45.77,
+  "training_date": "2026-11-16T01:34:45.772579"
+}
