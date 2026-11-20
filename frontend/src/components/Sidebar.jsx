@@ -6,61 +6,104 @@ import {
   Network,
   Bell,
   Settings,
-  Shield,
 } from "lucide-react";
+import MeterLogo from "./MeterLogo";
 
-export default function Sidebar() {
+const NAV_ITEMS = [
+  { id: "dashboard", label: "Dashboard", icon: Gauge },
+  { id: "live-monitoring", label: "Live Monitoring", icon: Activity },
+  { id: "ai-detection", label: "AI Detection", icon: ShieldCheck },
+  { id: "meter-locations", label: "Meter Locations", icon: MapPin },
+  { id: "meter-network", label: "Meter Network", icon: Network },
+  { id: "alerts-logs", label: "Alerts & Logs", icon: Bell },
+  { id: "settings", label: "Settings", icon: Settings },
+];
+
+export default function Sidebar({ currentTab = "dashboard", onSelectTab }) {
   return (
-    <aside className="sidebar">
-      <div className="brand" style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 16px" }}>
-        <div style={{ background: "var(--navy-light)", borderRadius: "8px", padding: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Shield size={24} color="#22C55E" />
+    <aside className="sidebar" style={{ userSelect: "none", WebkitUserSelect: "none" }}>
+      <div
+        className="brand"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          padding: "16px",
+          borderBottom: "1px solid rgba(211, 212, 192, 0.12)",
+        }}
+      >
+        <div
+          style={{
+            background: "rgba(10, 41, 71, 0.8)",
+            borderRadius: "10px",
+            padding: "4px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "1px solid rgba(34, 197, 94, 0.3)",
+          }}
+        >
+          <MeterLogo size={34} glowing={true} />
         </div>
         <div>
-          <div style={{ fontSize: "1.1rem", fontWeight: "700", color: "#FFFFFF", letterSpacing: "0.5px" }}>
+          <div
+            style={{
+              fontSize: "1.08rem",
+              fontWeight: "700",
+              color: "#FFFFFF",
+              letterSpacing: "0.5px",
+              lineHeight: 1.2,
+            }}
+          >
             MeterGuard AI
           </div>
-          <div style={{ fontSize: "0.7rem", color: "var(--sage)", textTransform: "uppercase", letterSpacing: "1px" }}>
-            Tampering Detector
+          <div
+            style={{
+              fontSize: "0.68rem",
+              color: "#4ADE80",
+              textTransform: "uppercase",
+              letterSpacing: "1.2px",
+              fontWeight: "600",
+              marginTop: "2px",
+            }}
+          >
+            TAMPERING DETECTOR
           </div>
         </div>
       </div>
 
-      <nav className="sidebar-nav">
-        <div className="nav-item active">
-          <Gauge size={20} />
-          <span>Dashboard</span>
-        </div>
-
-        <div className="nav-item">
-          <Activity size={20} />
-          <span>Live Monitoring</span>
-        </div>
-
-        <div className="nav-item">
-          <ShieldCheck size={20} />
-          <span>AI Detection</span>
-        </div>
-
-        <div className="nav-item">
-          <MapPin size={20} />
-          <span>Meter Locations</span>
-        </div>
-
-        <div className="nav-item">
-          <Network size={20} />
-          <span>Meter Network</span>
-        </div>
-
-        <div className="nav-item">
-          <Bell size={20} />
-          <span>Alerts & Logs</span>
-        </div>
-
-        <div className="nav-item">
-          <Settings size={20} />
-          <span>Settings</span>
-        </div>
+      <nav className="sidebar-nav" aria-label="Main Navigation">
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          const isActive = currentTab === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={`nav-item ${isActive ? "active" : ""}`}
+              onClick={() => onSelectTab && onSelectTab(item.id)}
+              style={{
+                width: "100%",
+                background: isActive
+                  ? "linear-gradient(90deg, rgba(139, 94, 60, 0.82), rgba(139, 94, 60, 0.36))"
+                  : "transparent",
+                border: "none",
+                textAlign: "left",
+                fontFamily: "inherit",
+                cursor: "pointer",
+                userSelect: "none",
+                WebkitUserSelect: "none",
+                WebkitTapHighlightColor: "transparent",
+                outline: "none",
+              }}
+              title={item.label}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <Icon size={20} color={isActive ? "var(--cream)" : "var(--sage)"} />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
       </nav>
 
       <div className="sidebar-bottom">
@@ -70,12 +113,12 @@ export default function Sidebar() {
             Backend Online
           </div>
           <div className="backend-text">
-            ESP32 • Flask • AI
+            FastAPI • MySQL • AI
           </div>
         </div>
 
         <div className="sidebar-footer-text">
-          MeterGuard AI Monitoring
+          MeterGuard AI Monitoring v1.0
         </div>
       </div>
     </aside>

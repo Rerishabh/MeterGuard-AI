@@ -1,0 +1,88 @@
+export default function MeterLogo({ size = 34, glowing = true }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 40 40"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{
+        filter: glowing ? "drop-shadow(0 0 6px rgba(34, 197, 94, 0.45))" : "none",
+        flexShrink: 0,
+        display: "block",
+      }}
+    >
+      <defs>
+        <linearGradient id="meterBodyGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#184366" />
+          <stop offset="100%" stopColor="#082033" />
+        </linearGradient>
+        <linearGradient id="meterLcdGrad" x1="0" y1="0" x2="0" y2="10" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#04121F" />
+          <stop offset="100%" stopColor="#082842" />
+        </linearGradient>
+        <linearGradient id="boltGrad" x1="0" y1="0" x2="10" y2="16" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#4ADE80" />
+          <stop offset="100%" stopColor="#22C55E" />
+        </linearGradient>
+      </defs>
+
+      {/* Outer Utility Meter Enclosure */}
+      <rect
+        x="3"
+        y="3"
+        width="34"
+        height="34"
+        rx="8"
+        fill="url(#meterBodyGrad)"
+        stroke="#22C55E"
+        strokeWidth="1.5"
+      />
+
+      {/* Circular Meter Glass Bezel */}
+      <circle
+        cx="20"
+        cy="18"
+        r="12"
+        fill="#051726"
+        stroke="rgba(211, 212, 192, 0.25)"
+        strokeWidth="1"
+      />
+
+      {/* Digital LCD kWh Display Screen */}
+      <rect
+        x="12"
+        y="9.5"
+        width="16"
+        height="7.5"
+        rx="1.5"
+        fill="url(#meterLcdGrad)"
+        stroke="#22C55E"
+        strokeWidth="0.8"
+      />
+
+      {/* Digital Readout Segments */}
+      <line x1="14" y1="13.2" x2="16.8" y2="13.2" stroke="#4ADE80" strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="18.2" y1="13.2" x2="21" y2="13.2" stroke="#4ADE80" strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="22.4" y1="13.2" x2="25.2" y2="13.2" stroke="#4ADE80" strokeWidth="1.2" strokeLinecap="round" />
+
+      {/* Small 'kWh' indicator on screen */}
+      <circle cx="26" cy="11" r="0.6" fill="#22C55E" />
+
+      {/* Electric Lightning Bolt Accent */}
+      <path
+        d="M21 18.2 L17 24 H21.2 L19.2 28.5 L24.5 22.8 H20.8 L22.4 18.2 Z"
+        fill="url(#boltGrad)"
+      />
+
+      {/* Calibrated Pulse Status LEDs */}
+      <circle cx="8" cy="8" r="1.4" fill="#22C55E" />
+      <circle cx="32" cy="8" r="1.4" fill="#4ADE80" opacity="0.85" />
+
+      {/* Terminal Block Connections at Bottom */}
+      <rect x="8" y="32.5" width="5" height="3" rx="1" fill="#153E61" stroke="#22C55E" strokeWidth="0.6" />
+      <rect x="17.5" y="32.5" width="5" height="3" rx="1" fill="#153E61" stroke="#22C55E" strokeWidth="0.6" />
+      <rect x="27" y="32.5" width="5" height="3" rx="1" fill="#153E61" stroke="#22C55E" strokeWidth="0.6" />
+    </svg>
+  );
+}

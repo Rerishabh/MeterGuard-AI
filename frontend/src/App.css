@@ -268,13 +268,32 @@ select {
   color:
     var(--sage);
 
+  background:
+    transparent;
+
+  border:
+    none;
+
   border-radius: 9px;
+
+  font-family:
+    inherit;
 
   font-size: 15px;
 
   font-weight: 600;
 
   cursor: pointer;
+
+  user-select: none;
+
+  -webkit-user-select: none;
+
+  -webkit-tap-highlight-color: transparent;
+
+  outline: none;
+
+  text-align: left;
 
   transition:
     0.2s ease;

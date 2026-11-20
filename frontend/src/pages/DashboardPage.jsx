@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  Zap,
   Clock3,
   Wifi,
   WifiOff,
@@ -19,7 +18,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
-import Sidebar from "../components/Sidebar";
+import MeterLogo from "../components/MeterLogo";
 import MeterSummaryCard from "../components/MeterSummaryCard";
 import NetworkDifferentialCard from "../components/NetworkDifferentialCard";
 import TamperingSimulatorCard from "../components/TamperingSimulatorCard";
@@ -171,28 +170,16 @@ export default function DashboardPage({
       : [21.2514, 81.6296];
 
   return (
-    <div
-      className="app"
-      style={{
-        "--dashboard-bg": `url(${backgroundImage})`,
-      }}
-    >
-      <div className="background-layer"></div>
-
-      {/* SIDEBAR */}
-      <Sidebar />
-
-      {/* MAIN CONTENT */}
-      <main className="main">
-        {/* TOPBAR */}
-        <header className="topbar">
-          <div>
-            <div className="title-row">
-              <Zap size={30} />
-              <h1>MeterGuard AI Dashboard</h1>
-            </div>
-            <p>Real-time intelligent utility meter tampering detection</p>
+    <main className="main">
+      {/* TOPBAR */}
+      <header className="topbar">
+        <div>
+          <div className="title-row">
+            <MeterLogo size={32} />
+            <h1>MeterGuard AI Dashboard</h1>
           </div>
+          <p>Real-time intelligent utility meter tampering detection</p>
+        </div>
 
           <div className="topbar-right">
             <div className="live-badge">
@@ -557,6 +544,5 @@ export default function DashboardPage({
           <span>ESP32 • AI • IoT • Real-Time Monitoring</span>
         </footer>
       </main>
-    </div>
   );
 }
