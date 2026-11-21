@@ -69,24 +69,28 @@ def build_meter_payload_from_db(meter: Meter, db: Session) -> Dict[str, Any]:
             last_seen_seconds = round(diff, 1)
             last_seen = ref_time.isoformat()
 
-    # 3. Recent readings history from MySQL (up to 60 readings)
-    recent_readings = (
-        db.query(HardwareReading)
-        .filter(HardwareReading.meter_id == meter_id)
-        .order_by(HardwareReading.timestamp.asc())
-        .limit(60)
-        .all()
-    )
-
-    live_history = [
-        {
-            "time": r.id * 100,
-            "current_A": r.current_a or 0.0,
-            "voltage_V": r.voltage_v or 230.0,
-            "power_W": r.power_w or 0.0,
-        }
-        for r in recent_readings
-    ]
+    # 3. Recent readings history from in-memory stream buffer, falling back to latest MySQL records
+    mem_history = list(ml_engine.live_electrical_history.get(meter_id, []))
+    if mem_history:
+        live_history = mem_history
+    else:
+        recent_readings = (
+            db.query(HardwareReading)
+            .filter(HardwareReading.meter_id == meter_id)
+            .order_by(HardwareReading.timestamp.desc())
+            .limit(60)
+            .all()
+        )
+        recent_readings.reverse()
+        live_history = [
+            {
+                "time": r.id * 100,
+                "current_A": r.current_a or 0.0,
+                "voltage_V": r.voltage_v or 230.0,
+                "power_W": r.power_w or 0.0,
+            }
+            for r in recent_readings
+        ]
 
     # Reconstruct electrical object
     electrical = {
@@ -174,20 +178,38 @@ def build_meter_payload_from_db(meter: Meter, db: Session) -> Dict[str, Any]:
         }
 
     cached_m2 = ml_engine.latest_meter_data.get(meter_id, {}).get("model2")
-    model2 = cached_m2 or {
-        "prediction": latest_hw.model2_status if latest_hw else "NORMAL",
-        "raw_prediction": latest_hw.model2_status if latest_hw else "NORMAL",
-        "fault_active": latest_hw.final_status in ["FAULT DETECTED", "HIGH PRIORITY ALERT"] if latest_hw else False,
-        "fault_type": None,
-        "fault_status": "MONITORING",
-        "fault_confidence": 0.0,
-        "window_size": 0,
-        "normal_count": 0,
-        "fault_s1_count": 0,
-        "fault_s2_count": 0,
-        "smoothing_history_length": 0,
-        "features": {},
-    }
+    if cached_m2:
+        model2 = cached_m2
+    elif latest_hw and latest_hw.model2_status:
+        model2 = {
+            "prediction": latest_hw.model2_status,
+            "raw_prediction": latest_hw.model2_status,
+            "fault_active": latest_hw.final_status in ["FAULT DETECTED", "HIGH PRIORITY ALERT"],
+            "fault_type": None,
+            "fault_status": "MONITORING",
+            "fault_confidence": 0.0,
+            "window_size": 0,
+            "normal_count": 0,
+            "fault_s1_count": 0,
+            "fault_s2_count": 0,
+            "smoothing_history_length": 0,
+            "features": {},
+        }
+    else:
+        model2 = {
+            "prediction": "WAITING FOR DATA",
+            "raw_prediction": None,
+            "fault_active": False,
+            "fault_type": None,
+            "fault_status": "WAITING FOR DATA",
+            "fault_confidence": 0.0,
+            "window_size": 0,
+            "normal_count": 0,
+            "fault_s1_count": 0,
+            "fault_s2_count": 0,
+            "smoothing_history_length": 0,
+            "features": {},
+        }
 
     decision = {
         "final_status": meter.status or "MONITORING",

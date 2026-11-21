@@ -394,12 +394,36 @@ export default function InvestigationBriefPanel({
                       <span
                         style={{
                           fontSize: "0.85rem",
-                          color: isChecked ? "#E2E8F0" : "var(--text-secondary)",
+                          color: isChecked ? "#CBD5E1" : "var(--text-secondary)",
                           textDecoration: isChecked ? "line-through" : "none",
                           opacity: isChecked ? 0.8 : 1,
                         }}
                       >
-                        {item}
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            p: ({ _node, ...props }) => <span {...props} />,
+                            strong: ({ _node, ...props }) => (
+                              <strong style={{ color: isChecked ? "#94A3B8" : "#FFFFFF", fontWeight: "700" }} {...props} />
+                            ),
+                            code: ({ _node, ...props }) => (
+                              <code
+                                style={{
+                                  background: "rgba(10, 41, 71, 0.7)",
+                                  border: "1px solid rgba(211, 212, 192, 0.2)",
+                                  padding: "1px 4px",
+                                  borderRadius: "3px",
+                                  color: "#4ADE80",
+                                  fontSize: "0.9em",
+                                  fontFamily: "monospace",
+                                }}
+                                {...props}
+                              />
+                            ),
+                          }}
+                        >
+                          {item}
+                        </ReactMarkdown>
                       </span>
                     </div>
                   );

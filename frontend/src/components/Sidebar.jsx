@@ -19,7 +19,12 @@ const NAV_ITEMS = [
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
-export default function Sidebar({ currentTab = "dashboard", onSelectTab }) {
+export default function Sidebar({
+  currentTab = "dashboard",
+  onSelectTab,
+  health = null,
+  isBackendOnline = true,
+}) {
   return (
     <aside className="sidebar" style={{ userSelect: "none", WebkitUserSelect: "none" }}>
       <div
@@ -109,11 +114,35 @@ export default function Sidebar({ currentTab = "dashboard", onSelectTab }) {
       <div className="sidebar-bottom">
         <div className="backend-card">
           <div className="backend-status">
-            <span className="live-dot"></span>
-            Backend Online
+            <span
+              className={
+                !isBackendOnline
+                  ? "offline-dot"
+                  : health?.database_connected === false
+                  ? "live-dot"
+                  : "live-dot"
+              }
+              style={{
+                background:
+                  !isBackendOnline
+                    ? "#EF4444"
+                    : health?.database_connected === false
+                    ? "#F59E0B"
+                    : "#22C55E",
+              }}
+            ></span>
+            {!isBackendOnline
+              ? "Backend Offline"
+              : health?.database_connected === false
+              ? "API Online • DB Offline"
+              : "Backend & DB Online"}
           </div>
           <div className="backend-text">
-            FastAPI • MySQL • AI
+            {!isBackendOnline
+              ? "FastAPI & MySQL Disconnected"
+              : health?.database_connected === false
+              ? "FastAPI Active • MySQL Disconnected"
+              : "FastAPI • MySQL Connected"}
           </div>
         </div>
 

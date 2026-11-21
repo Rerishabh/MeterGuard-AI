@@ -322,7 +322,7 @@ export default function DashboardPage({
                   </div>
                 </div>
 
-                <span className={`prediction ${model2Prediction.toLowerCase()}`}>
+                <span className={`prediction ${model2Prediction.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
                   {model2Prediction}
                 </span>
               </div>

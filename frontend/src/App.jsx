@@ -8,7 +8,7 @@ import MeterLocationsPage from "./pages/MeterLocationsPage";
 import MeterNetworkPage from "./pages/MeterNetworkPage";
 import AlertsLogsPage from "./pages/AlertsLogsPage";
 import SettingsPage from "./pages/SettingsPage";
-import { fetchDashboard } from "./services/api";
+import { fetchDashboard, fetchHealth } from "./services/api";
 import { Activity } from "lucide-react";
 import "./App.css";
 
@@ -31,6 +31,7 @@ function getTabFromHash() {
 
 function App() {
   const [dashboard, setDashboard] = useState(null);
+  const [health, setHealth] = useState(null);
   const [selectedMeter, setSelectedMeter] = useState("M001");
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
@@ -59,9 +60,15 @@ function App() {
 
     async function loadData() {
       try {
-        const data = await fetchDashboard();
+        const [data, healthData] = await Promise.all([
+          fetchDashboard(),
+          fetchHealth().catch(() => null),
+        ]);
         if (isMounted) {
           setDashboard(data);
+          if (healthData) {
+            setHealth(healthData);
+          }
           setError(null);
           setLastUpdate(new Date());
 
@@ -214,7 +221,12 @@ function App() {
       <div className="background-layer"></div>
 
       {/* PERSISTENT SIDEBAR NAVIGATION */}
-      <Sidebar currentTab={currentTab} onSelectTab={handleTabChange} />
+      <Sidebar
+        currentTab={currentTab}
+        onSelectTab={handleTabChange}
+        health={health}
+        isBackendOnline={Boolean(dashboard)}
+      />
 
       {/* ACTIVE PAGE CONTENT */}
       {renderContent()}

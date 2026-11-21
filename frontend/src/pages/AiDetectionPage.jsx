@@ -172,7 +172,7 @@ export default function AiDetectionPage({
             <span style={{ fontSize: "13px", color: "var(--cream)" }}>
               {faultType ? `Fault: ${faultType.replace("FAULT_", "")}` : "Hardware Status:"}
             </span>
-            <span className={`prediction ${model2Prediction.toLowerCase()}`} style={{ fontSize: "13px", fontWeight: "700" }}>
+            <span className={`prediction ${model2Prediction.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`} style={{ fontSize: "13px", fontWeight: "700" }}>
               {model2Prediction}
             </span>
           </div>

@@ -154,13 +154,39 @@ STAGE G: INVESTIGATION REPORT GENERATION
 
 ---
 
+## Section F: Focused UI Polish & Verification
+
+### 1. Forensic Checklist Markdown Rendering
+- **Problem:** Checklist items previously displayed literal Markdown characters such as `**Physical Integrity:**` and `` `H1_CS` ``.
+- **Fix:** Refactored `InvestigationBriefPanel.jsx` checklist item renderer to parse inline markdown using `<ReactMarkdown remarkPlugins={[remarkGfm]}>`. Bold prefix titles now render in crisp `#FFFFFF` bold text, and sensor tokens render inside styled `<code>` badges.
+- **Export Integrity:** Checked states dynamically update the downloaded `.md` file, replacing `- [ ]` with `- [x]`, and unchecking replaces `- [x]` with `- [ ]`.
+
+### 2. Live Electrical Readings Chart Dynamic Scaling & Empty State
+- **Problem:** When power values were steady (e.g. 23.5 W), default Recharts scaling (0 to 250) made the curve appear as an uninformative flat line at the bottom. Furthermore, when no frames were available, the empty state was generic.
+- **Fix:** In `LiveElectricalChart.jsx`, updated `<YAxis>` to dynamically zoom to the active power range using `domain={[(min) => Math.max(0, Math.floor(min - 5)), (max) => Math.ceil(max + 5)]}` with explicit `W` units and custom Tooltip formatting. Created a dedicated, styled empty state component featuring the `Activity` icon with clear guidance when genuine streaming frames have not yet been ingested.
+- **Backend Stream History:** In `backend/app/routes/dashboard.py`, updated `build_meter_payload_from_db` to prioritize the live in-memory telemetry buffer (`ml_engine.live_electrical_history`), and when falling back to MySQL `hardware_readings`, it now retrieves the 60 most recent frames (`order_by(timestamp.desc()).limit(60)`) rather than the oldest initialization records.
+
+### 3. AI Model Status Authenticity
+- **Problem:** If a meter had no recorded hardware readings, Model 2 was defaulting to `"NORMAL"`.
+- **Fix:** In `dashboard.py`, if a meter has zero recorded hardware telemetry, Model 2 reports `"WAITING FOR DATA"`. Model 1 strictly displays `"WAITING FOR DATA"` or `"INSUFFICIENT HISTORY"` when fewer than 30 daily observations are present. Models never report `"NORMAL"` simply due to absent data.
+
+### 4. Database & Simulated-Data Separation
+- **Sidebar Health Decoupling:** In `Sidebar.jsx`, the bottom-left health card actively evaluates `/api/health` and distinguishes API reachability from MySQL connectivity:
+  - **API & MySQL Connected:** `Backend & DB Online` with green dot.
+  - **API Connected, MySQL Down:** `API Online • DB Offline` with amber warning dot.
+  - **API Unreachable:** `Backend Offline` with red offline dot.
+- **Dataset Isolation:** All simulated tampering runs set `is_simulated = 1` and store their scenario name in `consumption_sequences.scenario`. Training set curation scripts strictly filter `WHERE is_simulated = 0`. Simulated bench meters carry `SIM BENCH` badges in the UI, and live stream replays display `BENCH REPLAY`.
+
+---
+
 ## Verification Visual Artifacts
 
 The following visual audit captures have been generated and verified:
-- [Dashboard View](file:///C:/Users/risha/.gemini/antigravity/brain/513b349e-f6a4-4e82-9ee4-1958fc49fb79/audit_dashboard.png) — Meter M001 ONLINE status, calibrated electrical metrics, 3-model inference status.
-- [Live Electrical Telemetry](file:///C:/Users/risha/.gemini/antigravity/brain/513b349e-f6a4-4e82-9ee4-1958fc49fb79/audit_live_monitoring.png) — Real-time waveform chart, BENCH REPLAY indicator, differential sensor ADCs with neutral `"--"` fallbacks.
+- [Dashboard View](file:///C:/Users/risha/.gemini/antigravity/brain/513b349e-f6a4-4e82-9ee4-1958fc49fb79/audit_dashboard.png) — Dynamic Y-axis electrical chart, Backend & DB Online status, and authentic multi-model status pills.
+- [Live Electrical Telemetry](file:///C:/Users/risha/.gemini/antigravity/brain/513b349e-f6a4-4e82-9ee4-1958fc49fb79/audit_live_monitoring.png) — Real-time waveform chart with zoomed domain, BENCH REPLAY indicator, and differential sensor ADCs.
 - [AI Tampering Detection Suite](file:///C:/Users/risha/.gemini/antigravity/brain/513b349e-f6a4-4e82-9ee4-1958fc49fb79/audit_ai_detection.png) — 3 ML cards, reconstruction MSE gauge, and bound 30-Day load profile.
-- [Forensic Investigation Brief Panel](file:///C:/Users/risha/.gemini/antigravity/brain/513b349e-f6a4-4e82-9ee4-1958fc49fb79/audit_investigation_brief.png) — Full-page capture showing the tampering simulator, rich Markdown report rendering (no raw syntax), and interactive field checklist.
+- [Forensic Investigation Brief Panel](file:///C:/Users/risha/.gemini/antigravity/brain/513b349e-f6a4-4e82-9ee4-1958fc49fb79/audit_investigation_brief.png) — Checklist rendered without raw Markdown characters, styled markdown report, and tampering simulator bench.
 - [Connected Meter Network Directory](file:///C:/Users/risha/.gemini/antigravity/brain/513b349e-f6a4-4e82-9ee4-1958fc49fb79/audit_meter_network.png) — 5 registered meters with `SIM BENCH` badges, online/offline counts, and STALE filter tab.
 - [GIS Meter Locations](file:///C:/Users/risha/.gemini/antigravity/brain/513b349e-f6a4-4e82-9ee4-1958fc49fb79/audit_meter_locations.png) — Leaflet geospatial distribution map with interactive pins.
 - [Anomaly Alerts & Event Logs](file:///C:/Users/risha/.gemini/antigravity/brain/513b349e-f6a4-4e82-9ee4-1958fc49fb79/audit_alerts_logs.png) — MySQL persisted alerts table with severity tiers, detection models, and timestamps.
+
