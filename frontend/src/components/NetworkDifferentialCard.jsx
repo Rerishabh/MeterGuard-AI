@@ -5,8 +5,8 @@ export default function NetworkDifferentialCard({ readings = {}, statusType = "n
     <div className="panel">
       <div className="panel-header">
         <div>
-          <h2>Transmission Monitoring</h2>
-          <p>T1 / T2 / House sensor values</p>
+          <h2>Simulated Line Monitoring</h2>
+          <p>T1 / T2 / House simulated channel values</p>
         </div>
         <Radio size={23} />
       </div>

@@ -44,6 +44,8 @@ service-account*.json
 *.log
 *.bak
 *.swp
+scratch/
+backend/audit_results.json
 
 # IDE & Editor configuration
 .idea/

@@ -101,7 +101,7 @@ export default function AlertsLogsPage({
             <Bell size={28} color="#EF4444" />
             <h1>Anomaly Alerts & Event Logs</h1>
           </div>
-          <p>Audited tamper incidents, reconstruction deviations & hardware alarms</p>
+          <p>Audited tamper incidents, reconstruction deviations & simulated differential alarms</p>
         </div>
 
         <div className="topbar-right">

@@ -165,12 +165,12 @@ export default function AiDetectionPage({
           </div>
 
           <p style={{ fontSize: "12.5px", color: "var(--sage)", margin: "10px 0 16px", lineHeight: "1.4" }}>
-            Analyzes high-frequency current differentials across pole transformer (T1, T2) and meter (H1).
+            Analyzes simulated current differentials across transformer channels (T1, T2) and meter channel (H1).
           </p>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", background: "rgba(6, 28, 49, 0.6)", borderRadius: "8px" }}>
             <span style={{ fontSize: "13px", color: "var(--cream)" }}>
-              {faultType ? `Fault: ${faultType.replace("FAULT_", "")}` : "Hardware Status:"}
+              {faultType ? `Fault: ${faultType.replace("FAULT_", "")}` : "Simulation Status:"}
             </span>
             <span className={`prediction ${model2Prediction.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`} style={{ fontSize: "13px", fontWeight: "700" }}>
               {model2Prediction}

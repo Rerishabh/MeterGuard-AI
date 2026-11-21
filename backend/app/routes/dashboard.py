@@ -40,14 +40,14 @@ def build_meter_payload_from_db(meter: Meter, db: Session) -> Dict[str, Any]:
         .first()
     )
 
-    # Connection state evaluation (ONLINE, STALE, OFFLINE)
+    # Simulation activity state resolution (SIMULATED, SIMULATION PAUSED, AWAITING SIMULATION DATA)
     conn_info = ml_engine.get_meter_connection_info(meter_id)
     online = conn_info["online"]
     connection_state = conn_info["connection_state"]
     last_seen_seconds = conn_info["last_seen_seconds"]
     last_seen = conn_info["last_seen"]
 
-    if connection_state == "OFFLINE":
+    if connection_state == "AWAITING SIMULATION DATA":
         ref_time = None
         if latest_hw and latest_hw.timestamp:
             ref_time = latest_hw.timestamp
@@ -55,19 +55,21 @@ def build_meter_payload_from_db(meter: Meter, db: Session) -> Dict[str, Any]:
             ref_time = meter.last_seen
 
         if ref_time:
-            now_utc = datetime.utcnow()
-            diff = (now_utc - ref_time).total_seconds()
-            if diff <= 10:
+            # Handle potential local vs UTC timestamps in DB
+            diff = min(
+                abs((datetime.now() - ref_time).total_seconds()),
+                abs((datetime.utcnow() - ref_time).total_seconds())
+            )
+            if diff <= 5.0:
                 online = True
-                connection_state = "ONLINE"
-            elif diff <= 60:
-                online = False
-                connection_state = "STALE"
+                connection_state = "SIMULATED"
             else:
                 online = False
-                connection_state = "OFFLINE"
+                connection_state = "SIMULATION PAUSED"
             last_seen_seconds = round(diff, 1)
             last_seen = ref_time.isoformat()
+        else:
+            connection_state = "AWAITING SIMULATION DATA"
 
     # 3. Recent readings history from in-memory stream buffer, falling back to latest MySQL records
     mem_history = list(ml_engine.live_electrical_history.get(meter_id, []))
@@ -298,9 +300,11 @@ def get_meters():
                         "meters": [
                             {
                                 "meter_id": m.meter_id,
+                                "name": f"Simulation Meter {m.meter_id}",
                                 "online": ml_engine.get_meter_online_status(m.meter_id),
                                 "connection_state": ml_engine.get_meter_connection_info(m.meter_id)["connection_state"],
-                                "is_simulated": m.meter_id.startswith("M_SIM"),
+                                "simulation_state": ml_engine.get_meter_connection_info(m.meter_id)["simulation_state"],
+                                "is_simulated": True,
                                 "location": {
                                     "name": m.location_name or m.meter_id,
                                     "latitude": m.latitude,

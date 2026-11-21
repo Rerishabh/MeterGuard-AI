@@ -186,34 +186,32 @@ class MLEngine:
 
     def get_meter_connection_info(self, meter_id: str) -> Dict[str, Any]:
         """
-        Calculates granular meter connectivity based on recent telemetry heartbeat.
-        States:
-          - ONLINE:  telemetry within last 5 seconds
-          - STALE:   telemetry between 5 and 45 seconds ago
-          - OFFLINE: no telemetry for > 45 seconds or never observed
+        Calculates simulation activity state for a meter:
+        - SIMULATED: Active simulation frames received within last 5 seconds.
+        - SIMULATION PAUSED: Prior simulation frames exist, but none in last 5 seconds.
+        - AWAITING SIMULATION DATA: No simulation frames recorded yet.
         """
         if meter_id not in self.meter_last_seen:
             return {
                 "online": False,
-                "connection_state": "OFFLINE",
+                "connection_state": "AWAITING SIMULATION DATA",
+                "simulation_state": "AWAITING SIMULATION DATA",
                 "last_seen_seconds": None,
                 "last_seen": None,
             }
 
         elapsed = (datetime.now() - self.meter_last_seen[meter_id]).total_seconds()
         if elapsed <= 5:
-            state = "ONLINE"
+            state = "SIMULATED"
             online = True
-        elif elapsed <= 45:
-            state = "STALE"
-            online = False
         else:
-            state = "OFFLINE"
+            state = "SIMULATION PAUSED"
             online = False
 
         return {
             "online": online,
             "connection_state": state,
+            "simulation_state": state,
             "last_seen_seconds": round(elapsed, 1),
             "last_seen": self.meter_last_seen[meter_id].isoformat(),
         }

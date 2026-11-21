@@ -531,7 +531,7 @@ export default function InvestigationBriefPanel({
           <h3 style={{ color: "var(--cream)", marginBottom: "6px" }}>No Investigation Briefs Generated Yet</h3>
           <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", maxWidth: "480px", margin: "0 auto 16px" }}>
             Generate an evidence-grounded forensic investigation brief for Meter {selectedMeterId} cross-referencing
-            live sensor telemetry, LSTM reconstruction error, and temporal decision arbitration.
+            simulated electrical telemetry, LSTM reconstruction error, and temporal decision arbitration.
           </p>
           <button
             onClick={handleGenerate}

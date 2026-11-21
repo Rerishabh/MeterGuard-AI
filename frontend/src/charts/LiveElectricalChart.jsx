@@ -19,8 +19,8 @@ export default function LiveElectricalChart({
     <div className="panel">
       <div className="panel-header">
         <div>
-          <h2>Live Electrical Readings</h2>
-          <p>Real-time sensor monitoring</p>
+          <h2>Simulated Electrical Readings</h2>
+          <p>Simulated electrical monitoring</p>
         </div>
         <Activity size={23} />
       </div>
@@ -91,10 +91,10 @@ export default function LiveElectricalChart({
           >
             <Activity size={28} color="var(--sage-dark)" />
             <span style={{ fontSize: "13px", fontWeight: "600", color: "#FFFFFF" }}>
-              Awaiting Live Hardware Telemetry
+              Awaiting Simulated Electrical Telemetry
             </span>
             <small style={{ fontSize: "11px", color: "var(--sage-dark)", maxWidth: "340px" }}>
-              No live electrical stream frames received for this meter. Start the telemetry stream or replay script to view real-time power fluctuations.
+              No simulated electrical stream frames received for this meter. Start the dataset replay simulator to view real-time power fluctuations.
             </small>
           </div>
         )}

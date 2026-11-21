@@ -84,7 +84,7 @@ export default function MeterLocationsPage({
             <MapPin size={28} color="#22C55E" />
             <h1>Meter GIS Locations</h1>
           </div>
-          <p>Spatial distribution grid mapping & physical tamper surveillance (Demonstration / Simulated GIS Coordinates)</p>
+          <p>Spatial distribution grid mapping & simulated tamper surveillance (Demonstration / Simulated GIS Coordinates)</p>
         </div>
 
         <div className="topbar-right">
@@ -208,7 +208,7 @@ export default function MeterLocationsPage({
                         <small style={{ color: "#F3E4C9", marginTop: "2px", display: "block" }}>
                           Demo GIS Testbed
                         </small>
-                        <small>{item.online !== false ? "● Online" : "● Offline"}</small>
+                        <small>{item.connection_state === "SIMULATED" || item.online ? "● Simulated" : "● Simulation Paused"}</small>
                       </div>
                     </Popup>
                   </CircleMarker>
@@ -227,7 +227,7 @@ export default function MeterLocationsPage({
               </span>
               <span>
                 <i className="legend-fault"></i>
-                Hardware Tamper
+                Differential Tamper
               </span>
             </div>
           </div>
@@ -285,7 +285,7 @@ export default function MeterLocationsPage({
                       {getStatusText(item)}
                     </span>
                     <div style={{ fontSize: "10px", color: "var(--sage-dark)", marginTop: "6px" }}>
-                      {item.online !== false ? "● Online" : "● Offline"}
+                      {item.connection_state === "SIMULATED" || item.online ? "● Simulated" : "● Simulation Paused"}
                     </div>
                   </div>
                 </button>

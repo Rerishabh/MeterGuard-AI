@@ -23,7 +23,7 @@ export default function MeterSummaryCard({
           {Number(voltage).toFixed(1)}
           <small>V</small>
         </div>
-        <div className="metric-label">Calibrated supply voltage</div>
+        <div className="metric-label">Simulated supply voltage</div>
       </div>
 
       {/* CURRENT */}
@@ -38,7 +38,7 @@ export default function MeterSummaryCard({
           {Number(current).toFixed(3)}
           <small>A</small>
         </div>
-        <div className="metric-label">Estimated RMS current</div>
+        <div className="metric-label">Simulated RMS current</div>
       </div>
 
       {/* POWER */}
@@ -53,7 +53,7 @@ export default function MeterSummaryCard({
           {Number(power).toFixed(1)}
           <small>W</small>
         </div>
-        <div className="metric-label">Estimated electrical load</div>
+        <div className="metric-label">Simulated electrical load</div>
       </div>
 
       {/* SYSTEM STATUS */}

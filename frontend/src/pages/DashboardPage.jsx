@@ -102,7 +102,7 @@ export default function DashboardPage({
           <h2>Waiting for Meter Telemetry</h2>
           <p>No meter readings received yet.</p>
           <small style={{ color: "var(--sage)", marginTop: "12px", display: "block" }}>
-            Run the hardware simulator: <code>python backend/replay_hardware_dataset.py --loop</code>
+            Run the dataset replay simulator: <code>python backend/replay_hardware_dataset.py --loop</code>
           </small>
         </div>
       </div>
@@ -159,9 +159,9 @@ export default function DashboardPage({
     consumption: Number(value),
   }));
 
-  const connectionState = meter.connection_state || (meter.online !== false ? "ONLINE" : "OFFLINE");
-  const isOnline = connectionState === "ONLINE";
-  const isStale = connectionState === "STALE";
+  const connectionState = meter.connection_state || (meter.online ? "SIMULATED" : "SIMULATION PAUSED");
+  const isSimulated = connectionState === "SIMULATED";
+  const isPaused = connectionState === "SIMULATION PAUSED";
 
   const latitude = location.latitude;
   const longitude = location.longitude;
@@ -186,12 +186,12 @@ export default function DashboardPage({
         </div>
 
           <div className="topbar-right">
-            {isOnline ? (
+            {isSimulated ? (
               <div className="live-badge">
                 <span className="live-dot"></span>
-                LIVE TELEMETRY
+                SIMULATED STREAM
               </div>
-            ) : isStale ? (
+            ) : isPaused ? (
               <div
                 className="live-badge"
                 style={{
@@ -201,19 +201,19 @@ export default function DashboardPage({
                 }}
               >
                 <span style={{ background: "#F59E0B", width: "8px", height: "8px", borderRadius: "50%", display: "inline-block" }}></span>
-                STALE TELEMETRY
+                SIMULATION PAUSED
               </div>
             ) : (
               <div
                 className="live-badge"
                 style={{
-                  background: "rgba(239, 68, 68, 0.2)",
-                  border: "1px solid #EF4444",
-                  color: "#FCA5A5",
+                  background: "rgba(59, 130, 246, 0.2)",
+                  border: "1px solid #3B82F6",
+                  color: "#93C5FD",
                 }}
               >
-                <span className="offline-dot" style={{ background: "#EF4444", width: "8px", height: "8px", borderRadius: "50%", display: "inline-block" }}></span>
-                METER OFFLINE
+                <span style={{ background: "#3B82F6", width: "8px", height: "8px", borderRadius: "50%", display: "inline-block" }}></span>
+                SIMULATION MODE
               </div>
             )}
 
@@ -234,33 +234,33 @@ export default function DashboardPage({
             >
               {meters.map((item) => (
                 <option key={item.meter_id} value={item.meter_id}>
-                  {item.meter_id} {item.is_simulated ? "(Simulated)" : ""}
+                  Simulation Meter {item.meter_id}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="connection-status">
-            {isOnline ? (
+            {isSimulated ? (
               <>
                 <Wifi size={18} color="#22C55E" />
-                Meter {meter.meter_id}
+                Simulation Meter {meter.meter_id}
                 <span className="live-dot"></span>
-                <span style={{ color: "#4ADE80", fontWeight: "600" }}>ONLINE</span>
+                <span style={{ color: "#4ADE80", fontWeight: "600" }}>SIMULATED</span>
               </>
-            ) : isStale ? (
+            ) : isPaused ? (
               <>
                 <Wifi size={18} color="#F59E0B" />
-                Meter {meter.meter_id}
+                Simulation Meter {meter.meter_id}
                 <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#F59E0B", display: "inline-block" }}></span>
-                <span style={{ color: "#FCD34D", fontWeight: "600" }}>STALE</span>
+                <span style={{ color: "#FCD34D", fontWeight: "600" }}>SIMULATION PAUSED</span>
               </>
             ) : (
               <>
-                <WifiOff size={18} color="#EF4444" />
-                Meter {meter.meter_id}
-                <span className="offline-dot"></span>
-                <span style={{ color: "#FCA5A5", fontWeight: "600" }}>OFFLINE</span>
+                <WifiOff size={18} color="#94A3B8" />
+                Simulation Meter {meter.meter_id}
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#94A3B8", display: "inline-block" }}></span>
+                <span style={{ color: "#CBD5E1", fontWeight: "600" }}>AWAITING SIMULATION DATA</span>
               </>
             )}
           </div>
@@ -483,7 +483,7 @@ export default function DashboardPage({
                               Fault: {item.decision.fault_type.replace("FAULT_", "")}
                             </small>
                           )}
-                          <small>{item.online !== false ? "Online" : "Offline"}</small>
+                          <small>{item.connection_state === "SIMULATED" || item.online ? "Simulated" : "Simulation Paused"}</small>
                         </div>
                       </Popup>
                     </CircleMarker>
@@ -514,7 +514,7 @@ export default function DashboardPage({
           <div className="panel-header">
             <div>
               <h2>Connected Meter Network</h2>
-              <p>Smart meters connected to the backend</p>
+              <p>Simulated meters monitored by backend</p>
             </div>
             <Network size={23} />
           </div>
@@ -566,7 +566,7 @@ export default function DashboardPage({
                   </div>
 
                   <div className="network-bottom">
-                    <span>{item.online !== false ? "● Online" : "● Offline"}</span>
+                    <span>{item.connection_state === "SIMULATED" || item.online ? "● Simulated" : "● Simulation Paused"}</span>
                     <span>Priority: {item?.decision?.priority || "LOW"}</span>
                   </div>
                 </button>
@@ -578,7 +578,7 @@ export default function DashboardPage({
         {/* FOOTER */}
         <footer>
           <span>MeterGuard AI • Utility Meter Tampering Detector</span>
-          <span>ESP32 • AI • IoT • Real-Time Monitoring</span>
+          <span>Software Simulation Platform • AI Anomaly Detection • Real-Time Analytics</span>
         </footer>
       </main>
   );
