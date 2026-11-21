@@ -184,6 +184,40 @@ class MLEngine:
         elapsed = (datetime.now() - self.meter_last_seen[meter_id]).total_seconds()
         return elapsed <= 5
 
+    def get_meter_connection_info(self, meter_id: str) -> Dict[str, Any]:
+        """
+        Calculates granular meter connectivity based on recent telemetry heartbeat.
+        States:
+          - ONLINE:  telemetry within last 5 seconds
+          - STALE:   telemetry between 5 and 45 seconds ago
+          - OFFLINE: no telemetry for > 45 seconds or never observed
+        """
+        if meter_id not in self.meter_last_seen:
+            return {
+                "online": False,
+                "connection_state": "OFFLINE",
+                "last_seen_seconds": None,
+                "last_seen": None,
+            }
+
+        elapsed = (datetime.now() - self.meter_last_seen[meter_id]).total_seconds()
+        if elapsed <= 5:
+            state = "ONLINE"
+            online = True
+        elif elapsed <= 45:
+            state = "STALE"
+            online = False
+        else:
+            state = "OFFLINE"
+            online = False
+
+        return {
+            "online": online,
+            "connection_state": state,
+            "last_seen_seconds": round(elapsed, 1),
+            "last_seen": self.meter_last_seen[meter_id].isoformat(),
+        }
+
     def normalize_model2_prediction(self, prediction: Any) -> str:
         pred_str = str(prediction).strip().upper()
         if pred_str in ["NORMAL", "FAULT_S1", "FAULT_S2", "FAULT"]:
@@ -354,10 +388,15 @@ class MLEngine:
 
         consumption = self.generate_model1_consumption(meter_id)
         if consumption is None:
+            hist_len = len(self.meter_history[meter_id])
+            pred_state = "WAITING FOR DATA" if hist_len == 0 else "INSUFFICIENT HISTORY"
             return {
-                "prediction": "WAITING",
+                "prediction": pred_state,
+                "status_code": "INSUFFICIENT_HISTORY",
+                "message": f"Awaiting sufficient 30-day consumption history ({hist_len}/30 readings collected).",
                 "raw_prediction": None,
-                "history_length": len(self.meter_history[meter_id]),
+                "history_length": hist_len,
+                "required_length": MODEL1_MIN_HISTORY,
                 "features": None,
                 "consumption_history": None,
             }
@@ -380,6 +419,32 @@ class MLEngine:
             "features": feature_dict,
             "consumption_history": [round(float(v), 3) for v in consumption],
         }
+
+    def evaluate_consumption_with_model1(self, consumption: Any) -> Optional[Dict[str, Any]]:
+        """
+        Runs Model 1 Isolation Forest directly on an authentic 30-day daily consumption sequence
+        without fabricating numbers.
+        """
+        if self.model1 is None:
+            return None
+        if not isinstance(consumption, (list, tuple, np.ndarray)) or len(consumption) != 30:
+            return None
+        try:
+            features = create_model1_features(consumption)
+            raw_pred = self.model1.predict(features)[0]
+            pred = "NORMAL" if raw_pred == 1 else ("SUSPICIOUS" if raw_pred == -1 else "UNKNOWN")
+            feature_dict = {col: float(features.iloc[0][col]) for col in features.columns}
+            return {
+                "prediction": pred,
+                "raw_prediction": int(raw_pred),
+                "history_length": 30,
+                "required_length": 30,
+                "features": feature_dict,
+                "consumption_history": [round(float(v), 3) for v in consumption],
+            }
+        except Exception as exc:
+            logger.warning("Error evaluating consumption with Model 1: %s", exc)
+            return None
 
     # ---------------------------------------------------------
     # Sequential LSTM Anomaly Detection (Model 3)

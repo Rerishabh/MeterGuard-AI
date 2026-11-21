@@ -36,6 +36,9 @@ export default function LiveMonitoringPage({
   const priority = decision.priority || "LOW";
   const faultType = decision.fault_type || null;
 
+  const connectionState = meter.connection_state || (meter.online !== false ? "ONLINE" : "OFFLINE");
+  const isSimulated = Boolean(meter.is_simulated || meter.meter_id?.startsWith("M_SIM_"));
+
   const liveChartData = liveHistory.map((item, index) => ({
     reading: index + 1,
     power: Number(item.power_W || 0),
@@ -64,10 +67,30 @@ export default function LiveMonitoringPage({
         </div>
 
         <div className="topbar-right">
-          <div className="live-badge">
-            <span className="live-dot"></span>
-            STREAMING (100ms)
-          </div>
+          {connectionState === "ONLINE" && (
+            <div className="live-badge">
+              <span className="live-dot"></span>
+              STREAMING (100ms)
+            </div>
+          )}
+          {connectionState === "STALE" && (
+            <div className="live-badge" style={{ background: "rgba(245, 158, 11, 0.2)", color: "#F59E0B", border: "1px solid rgba(245, 158, 11, 0.4)" }}>
+              <span className="live-dot" style={{ background: "#F59E0B" }}></span>
+              STALE TELEMETRY
+            </div>
+          )}
+          {connectionState === "OFFLINE" && (
+            <div className="live-badge" style={{ background: "rgba(239, 68, 68, 0.2)", color: "#EF4444", border: "1px solid rgba(239, 68, 68, 0.4)" }}>
+              <span className="live-dot" style={{ background: "#EF4444" }}></span>
+              METER OFFLINE
+            </div>
+          )}
+
+          {isSimulated && (
+            <div style={{ fontSize: "11px", fontWeight: "600", padding: "4px 8px", borderRadius: "6px", background: "rgba(147, 51, 234, 0.2)", color: "#C084FC", border: "1px solid rgba(147, 51, 234, 0.4)" }}>
+              BENCH REPLAY
+            </div>
+          )}
 
           <div className="time-display">
             <Clock3 size={17} />
@@ -93,16 +116,25 @@ export default function LiveMonitoringPage({
         </div>
 
         <div className="connection-status">
-          {meter.online !== false ? (
+          {connectionState === "ONLINE" && (
             <>
-              <Wifi size={18} />
+              <Wifi size={18} color="#22C55E" />
               Meter {meter.meter_id}
-              <span className="live-dot"></span>
+              <span className="live-dot" style={{ background: "#22C55E" }}></span>
               Online
             </>
-          ) : (
+          )}
+          {connectionState === "STALE" && (
             <>
-              <WifiOff size={18} />
+              <Clock3 size={18} color="#F59E0B" />
+              Meter {meter.meter_id}
+              <span className="live-dot" style={{ background: "#F59E0B" }}></span>
+              Stale {meter.last_seen_seconds != null ? `(${meter.last_seen_seconds}s ago)` : ""}
+            </>
+          )}
+          {connectionState === "OFFLINE" && (
+            <>
+              <WifiOff size={18} color="#EF4444" />
               Meter {meter.meter_id}
               <span className="offline-dot"></span>
               Offline
@@ -202,42 +234,42 @@ export default function LiveMonitoringPage({
             <div style={{ background: "rgba(6, 28, 49, 0.6)", padding: "14px", borderRadius: "8px", border: "1px solid rgba(211, 212, 192, 0.15)" }}>
               <span style={{ fontSize: "11px", color: "var(--sage)", textTransform: "uppercase" }}>Pole Transformer T1 CS</span>
               <div style={{ fontSize: "1.4rem", fontWeight: "700", color: "#FFFFFF", marginTop: "4px" }}>
-                {readings.T1_CS !== undefined ? readings.T1_CS : "3020"} <small style={{ fontSize: "11px", color: "var(--sage)" }}>ADC</small>
+                {readings.T1_CS !== undefined && readings.T1_CS !== null ? readings.T1_CS : "--"} <small style={{ fontSize: "11px", color: "var(--sage)" }}>ADC</small>
               </div>
             </div>
 
             <div style={{ background: "rgba(6, 28, 49, 0.6)", padding: "14px", borderRadius: "8px", border: "1px solid rgba(211, 212, 192, 0.15)" }}>
               <span style={{ fontSize: "11px", color: "var(--sage)", textTransform: "uppercase" }}>Pole Transformer T1 VS</span>
               <div style={{ fontSize: "1.4rem", fontWeight: "700", color: "#FFFFFF", marginTop: "4px" }}>
-                {readings.T1_VS !== undefined ? readings.T1_VS : "230"} <small style={{ fontSize: "11px", color: "var(--sage)" }}>ADC</small>
+                {readings.T1_VS !== undefined && readings.T1_VS !== null ? readings.T1_VS : "--"} <small style={{ fontSize: "11px", color: "var(--sage)" }}>ADC</small>
               </div>
             </div>
 
             <div style={{ background: "rgba(6, 28, 49, 0.6)", padding: "14px", borderRadius: "8px", border: "1px solid rgba(211, 212, 192, 0.15)" }}>
               <span style={{ fontSize: "11px", color: "var(--sage)", textTransform: "uppercase" }}>Secondary Line T2 CS</span>
               <div style={{ fontSize: "1.4rem", fontWeight: "700", color: "#FFFFFF", marginTop: "4px" }}>
-                {readings.T2_CS !== undefined ? readings.T2_CS : "3015"} <small style={{ fontSize: "11px", color: "var(--sage)" }}>ADC</small>
+                {readings.T2_CS !== undefined && readings.T2_CS !== null ? readings.T2_CS : "--"} <small style={{ fontSize: "11px", color: "var(--sage)" }}>ADC</small>
               </div>
             </div>
 
             <div style={{ background: "rgba(6, 28, 49, 0.6)", padding: "14px", borderRadius: "8px", border: "1px solid rgba(211, 212, 192, 0.15)" }}>
               <span style={{ fontSize: "11px", color: "var(--sage)", textTransform: "uppercase" }}>Secondary Line T2 VS</span>
               <div style={{ fontSize: "1.4rem", fontWeight: "700", color: "#FFFFFF", marginTop: "4px" }}>
-                {readings.T2_VS !== undefined ? readings.T2_VS : "230"} <small style={{ fontSize: "11px", color: "var(--sage)" }}>ADC</small>
+                {readings.T2_VS !== undefined && readings.T2_VS !== null ? readings.T2_VS : "--"} <small style={{ fontSize: "11px", color: "var(--sage)" }}>ADC</small>
               </div>
             </div>
 
             <div style={{ background: "rgba(6, 28, 49, 0.6)", padding: "14px", borderRadius: "8px", border: "1px solid rgba(211, 212, 192, 0.15)" }}>
               <span style={{ fontSize: "11px", color: "var(--sage)", textTransform: "uppercase" }}>Household Meter H1 CS</span>
               <div style={{ fontSize: "1.4rem", fontWeight: "700", color: "#FFFFFF", marginTop: "4px" }}>
-                {readings.H1_CS !== undefined ? readings.H1_CS : "3020"} <small style={{ fontSize: "11px", color: "var(--sage)" }}>ADC</small>
+                {readings.H1_CS !== undefined && readings.H1_CS !== null ? readings.H1_CS : "--"} <small style={{ fontSize: "11px", color: "var(--sage)" }}>ADC</small>
               </div>
             </div>
 
             <div style={{ background: "rgba(6, 28, 49, 0.6)", padding: "14px", borderRadius: "8px", border: "1px solid rgba(211, 212, 192, 0.15)" }}>
               <span style={{ fontSize: "11px", color: "var(--sage)", textTransform: "uppercase" }}>Household Meter H1 VS</span>
               <div style={{ fontSize: "1.4rem", fontWeight: "700", color: "#FFFFFF", marginTop: "4px" }}>
-                {readings.H1_VS !== undefined ? readings.H1_VS : "230"} <small style={{ fontSize: "11px", color: "var(--sage)" }}>ADC</small>
+                {readings.H1_VS !== undefined && readings.H1_VS !== null ? readings.H1_VS : "--"} <small style={{ fontSize: "11px", color: "var(--sage)" }}>ADC</small>
               </div>
             </div>
           </div>

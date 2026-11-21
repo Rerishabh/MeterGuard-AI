@@ -33,9 +33,12 @@ export default function MeterNetworkPage({
 
     if (!matchesSearch) return false;
 
+    const connectionState = m.connection_state || (m.online !== false ? "ONLINE" : "OFFLINE");
+
     if (statusFilter === "ALL") return true;
-    if (statusFilter === "ONLINE") return m.online !== false;
-    if (statusFilter === "OFFLINE") return m.online === false;
+    if (statusFilter === "ONLINE") return connectionState === "ONLINE";
+    if (statusFilter === "STALE") return connectionState === "STALE";
+    if (statusFilter === "OFFLINE") return connectionState === "OFFLINE";
 
     const type = getStatusType(m);
     if (statusFilter === "NORMAL") return type === "normal";
@@ -46,7 +49,7 @@ export default function MeterNetworkPage({
   });
 
   const totalCount = meters.length;
-  const onlineCount = meters.filter((m) => m.online !== false).length;
+  const onlineCount = meters.filter((m) => (m.connection_state ? m.connection_state === "ONLINE" : m.online !== false)).length;
   const suspiciousCount = meters.filter((m) => getStatusType(m) === "suspicious").length;
   const faultCount = meters.filter((m) => getStatusType(m) === "fault").length;
 
@@ -155,7 +158,7 @@ export default function MeterNetworkPage({
           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
             <Filter size={16} color="var(--sage)" />
             <span style={{ fontSize: "12px", color: "var(--sage)", textTransform: "uppercase", letterSpacing: "1px" }}>Filter:</span>
-            {["ALL", "ONLINE", "NORMAL", "SUSPICIOUS", "FAULT", "OFFLINE"].map((tab) => (
+            {["ALL", "ONLINE", "STALE", "NORMAL", "SUSPICIOUS", "FAULT", "OFFLINE"].map((tab) => (
               <button
                 key={tab}
                 type="button"
@@ -202,6 +205,15 @@ export default function MeterNetworkPage({
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Radio size={18} color="#22C55E" />
                   <strong>{item.meter_id}</strong>
+                  {item.meter_id.startsWith("M_SIM_") || item.is_simulated ? (
+                    <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", background: "rgba(147, 51, 234, 0.2)", color: "#C084FC", border: "1px solid rgba(147, 51, 234, 0.4)", fontWeight: "600" }}>
+                      SIM BENCH
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", background: "rgba(34, 197, 94, 0.15)", color: "#86EFAC", border: "1px solid rgba(34, 197, 94, 0.3)", fontWeight: "600" }}>
+                      GRID NODE
+                    </span>
+                  )}
                   {item.location?.location_name && (
                     <span style={{ fontSize: "11px", color: "var(--sage)" }}>({item.location.location_name})</span>
                   )}
@@ -234,11 +246,17 @@ export default function MeterNetworkPage({
 
               <div className="network-bottom" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                  {item.online !== false ? (
+                  {(item.connection_state === "ONLINE" || (!item.connection_state && item.online !== false)) && (
                     <>
                       <Wifi size={13} color="#22C55E" /> Online
                     </>
-                  ) : (
+                  )}
+                  {item.connection_state === "STALE" && (
+                    <>
+                      <Clock3 size={13} color="#F59E0B" /> Stale
+                    </>
+                  )}
+                  {(item.connection_state === "OFFLINE" || (!item.connection_state && item.online === false)) && (
                     <>
                       <WifiOff size={13} color="#EF4444" /> Offline
                     </>

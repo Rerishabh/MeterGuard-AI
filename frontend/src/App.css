@@ -1442,6 +1442,17 @@ select {
     var(--cream);
 }
 
+.prediction.waiting,
+.prediction.waiting-for-data,
+.prediction.insufficient-history {
+  color:
+    var(--sage);
+  background:
+    rgba(10, 41, 71, 0.85);
+  border:
+    1px solid rgba(211, 212, 192, 0.25);
+}
+
 
 /* FAULT = RED */
 

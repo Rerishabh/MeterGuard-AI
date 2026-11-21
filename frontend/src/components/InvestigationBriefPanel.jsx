@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   FileText,
   Download,
@@ -99,7 +101,15 @@ export default function InvestigationBriefPanel({
 
   const handleDownload = () => {
     if (!activeReport || !activeReport.report_markdown) return;
-    const blob = new Blob([activeReport.report_markdown], {
+    let md = activeReport.report_markdown;
+    checklistItems.forEach((item, idx) => {
+      const isChecked = !!checkedItems[`${activeReport.id}-${idx}`];
+      if (isChecked) {
+        md = md.replace(`- [ ] ${item}`, `- [x] ${item}`);
+      }
+    });
+
+    const blob = new Blob([md], {
       type: "text/markdown;charset=utf-8;",
     });
     const url = URL.createObjectURL(blob);
@@ -116,9 +126,9 @@ export default function InvestigationBriefPanel({
   };
 
   // Extract checklist items from Markdown Section 4
-  const checklistItems = useMemo(() => {
-    if (!activeReport || !activeReport.report_markdown) return [];
-    const lines = activeReport.report_markdown.split("\n");
+  const extractChecklist = (report) => {
+    if (!report || !report.report_markdown) return [];
+    const lines = report.report_markdown.split("\n");
     const items = [];
     let inChecklist = false;
 
@@ -136,7 +146,9 @@ export default function InvestigationBriefPanel({
       }
     }
     return items;
-  }, [activeReport]);
+  };
+
+  const checklistItems = extractChecklist(activeReport);
 
   const toggleCheck = (idx) => {
     const key = `${activeReport?.id}-${idx}`;
@@ -396,24 +408,87 @@ export default function InvestigationBriefPanel({
             </div>
           )}
 
-          {/* MARKDOWN REPORT PREVIEW */}
+          {/* FORMATTED MARKDOWN REPORT VIEW */}
           <div
-            className="report-markdown-view"
+            className="report-markdown-view formatted-markdown"
             style={{
-              background: "rgba(3, 17, 31, 0.7)",
+              background: "rgba(3, 17, 31, 0.75)",
               border: "1px solid var(--border)",
               borderRadius: "10px",
-              padding: "20px",
+              padding: "24px",
               color: "#E2E8F0",
-              fontSize: "0.9rem",
-              lineHeight: "1.6",
-              maxHeight: "500px",
+              fontSize: "0.92rem",
+              lineHeight: "1.7",
+              maxHeight: "550px",
               overflowY: "auto",
-              fontFamily: "var(--font-mono, monospace)",
-              whiteSpace: "pre-wrap",
             }}
           >
-            {activeReport.report_markdown}
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                h1: ({ _node, ...props }) => (
+                  <h1 style={{ color: "#FFFFFF", fontSize: "1.45rem", borderBottom: "1px solid rgba(211, 212, 192, 0.2)", paddingBottom: "8px", marginTop: "0", marginBottom: "16px" }} {...props} />
+                ),
+                h2: ({ _node, ...props }) => (
+                  <h2 style={{ color: "var(--cream)", fontSize: "1.25rem", marginTop: "20px", marginBottom: "12px" }} {...props} />
+                ),
+                h3: ({ _node, ...props }) => (
+                  <h3 style={{ color: "#F3E4C9", fontSize: "1.1rem", marginTop: "18px", marginBottom: "10px" }} {...props} />
+                ),
+                h4: ({ _node, ...props }) => (
+                  <h4 style={{ color: "var(--sage)", fontSize: "0.98rem", marginTop: "14px", marginBottom: "8px" }} {...props} />
+                ),
+                p: ({ _node, ...props }) => <p style={{ marginBottom: "12px", color: "#CBD5E1" }} {...props} />,
+                strong: ({ _node, ...props }) => <strong style={{ color: "#FFFFFF", fontWeight: "700" }} {...props} />,
+                code: ({ _node, _inline, ...props }) => (
+                  <code
+                    style={{
+                      background: "rgba(10, 41, 71, 0.7)",
+                      border: "1px solid rgba(211, 212, 192, 0.2)",
+                      padding: "2px 6px",
+                      borderRadius: "4px",
+                      color: "#4ADE80",
+                      fontSize: "0.85em",
+                      fontFamily: "monospace",
+                    }}
+                    {...props}
+                  />
+                ),
+                ul: ({ _node, ...props }) => <ul style={{ paddingLeft: "20px", marginBottom: "12px" }} {...props} />,
+                ol: ({ _node, ...props }) => <ol style={{ paddingLeft: "20px", marginBottom: "12px" }} {...props} />,
+                li: ({ _node, ...props }) => <li style={{ marginBottom: "6px", color: "#CBD5E1" }} {...props} />,
+                blockquote: ({ _node, ...props }) => (
+                  <blockquote
+                    style={{
+                      borderLeft: "4px solid #8B5E3C",
+                      color: "var(--sage)",
+                      fontStyle: "italic",
+                      background: "rgba(139, 94, 60, 0.12)",
+                      padding: "10px 14px",
+                      margin: "14px 0",
+                      borderRadius: "0 6px 6px 0",
+                    }}
+                    {...props}
+                  />
+                ),
+                hr: ({ _node, ...props }) => (
+                  <hr style={{ border: "none", borderTop: "1px solid rgba(211, 212, 192, 0.15)", margin: "20px 0" }} {...props} />
+                ),
+                table: ({ _node, ...props }) => (
+                  <div style={{ overflowX: "auto", margin: "16px 0" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }} {...props} />
+                  </div>
+                ),
+                th: ({ _node, ...props }) => (
+                  <th style={{ borderBottom: "1px solid rgba(211, 212, 192, 0.25)", padding: "8px", textAlign: "left", color: "var(--sage)" }} {...props} />
+                ),
+                td: ({ _node, ...props }) => (
+                  <td style={{ borderBottom: "1px solid rgba(211, 212, 192, 0.1)", padding: "8px", color: "#E2E8F0" }} {...props} />
+                ),
+              }}
+            >
+              {activeReport.report_markdown}
+            </ReactMarkdown>
           </div>
         </div>
       ) : (

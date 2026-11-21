@@ -47,7 +47,7 @@ export default function AiDetectionPage({
   const faultType = decision.fault_type || model2.fault_type || null;
   const statusType = getStatusType(meter);
 
-  const consumptionHistory = model1.consumption_history || [];
+  const consumptionHistory = model1.consumption_history || meter.consumption_history || [];
   const consumptionData = consumptionHistory.map((value, index) => ({
     day: `D${index + 1}`,
     consumption: Number(value),
@@ -139,7 +139,10 @@ export default function AiDetectionPage({
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", background: "rgba(6, 28, 49, 0.6)", borderRadius: "8px" }}>
             <span style={{ fontSize: "13px", color: "var(--cream)" }}>Anomaly Verdict:</span>
-            <span className={`prediction ${model1Prediction.toLowerCase()}`} style={{ fontSize: "13px", fontWeight: "700" }}>
+            <span
+              className={`prediction ${model1Prediction.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+              style={{ fontSize: "13px", fontWeight: "700" }}
+            >
               {model1Prediction}
             </span>
           </div>

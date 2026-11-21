@@ -153,11 +153,15 @@ export default function DashboardPage({
     voltage: Number(item.voltage_V || 0),
   }));
 
-  const consumptionHistory = model1.consumption_history || [];
+  const consumptionHistory = model1.consumption_history || meter.consumption_history || [];
   const consumptionData = consumptionHistory.map((value, index) => ({
     day: `D${index + 1}`,
     consumption: Number(value),
   }));
+
+  const connectionState = meter.connection_state || (meter.online !== false ? "ONLINE" : "OFFLINE");
+  const isOnline = connectionState === "ONLINE";
+  const isStale = connectionState === "STALE";
 
   const latitude = location.latitude;
   const longitude = location.longitude;
@@ -182,10 +186,36 @@ export default function DashboardPage({
         </div>
 
           <div className="topbar-right">
-            <div className="live-badge">
-              <span className="live-dot"></span>
-              LIVE
-            </div>
+            {isOnline ? (
+              <div className="live-badge">
+                <span className="live-dot"></span>
+                LIVE TELEMETRY
+              </div>
+            ) : isStale ? (
+              <div
+                className="live-badge"
+                style={{
+                  background: "rgba(245, 158, 11, 0.2)",
+                  border: "1px solid #F59E0B",
+                  color: "#FCD34D",
+                }}
+              >
+                <span style={{ background: "#F59E0B", width: "8px", height: "8px", borderRadius: "50%", display: "inline-block" }}></span>
+                STALE TELEMETRY
+              </div>
+            ) : (
+              <div
+                className="live-badge"
+                style={{
+                  background: "rgba(239, 68, 68, 0.2)",
+                  border: "1px solid #EF4444",
+                  color: "#FCA5A5",
+                }}
+              >
+                <span className="offline-dot" style={{ background: "#EF4444", width: "8px", height: "8px", borderRadius: "50%", display: "inline-block" }}></span>
+                METER OFFLINE
+              </div>
+            )}
 
             <div className="time-display">
               <Clock3 size={17} />
@@ -204,26 +234,33 @@ export default function DashboardPage({
             >
               {meters.map((item) => (
                 <option key={item.meter_id} value={item.meter_id}>
-                  {item.meter_id}
+                  {item.meter_id} {item.is_simulated ? "(Simulated)" : ""}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="connection-status">
-            {meter.online !== false ? (
+            {isOnline ? (
               <>
-                <Wifi size={18} />
+                <Wifi size={18} color="#22C55E" />
                 Meter {meter.meter_id}
                 <span className="live-dot"></span>
-                Online
+                <span style={{ color: "#4ADE80", fontWeight: "600" }}>ONLINE</span>
+              </>
+            ) : isStale ? (
+              <>
+                <Wifi size={18} color="#F59E0B" />
+                Meter {meter.meter_id}
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#F59E0B", display: "inline-block" }}></span>
+                <span style={{ color: "#FCD34D", fontWeight: "600" }}>STALE</span>
               </>
             ) : (
               <>
-                <WifiOff size={18} />
+                <WifiOff size={18} color="#EF4444" />
                 Meter {meter.meter_id}
                 <span className="offline-dot"></span>
-                Offline
+                <span style={{ color: "#FCA5A5", fontWeight: "600" }}>OFFLINE</span>
               </>
             )}
           </div>
@@ -270,7 +307,7 @@ export default function DashboardPage({
                   </div>
                 </div>
 
-                <span className={`prediction ${model1Prediction.toLowerCase()}`}>
+                <span className={`prediction ${model1Prediction.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
                   {model1Prediction}
                 </span>
               </div>

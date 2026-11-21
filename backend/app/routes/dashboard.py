@@ -23,7 +23,6 @@ router = APIRouter(tags=["Dashboard"])
 def build_meter_payload_from_db(meter: Meter, db: Session) -> Dict[str, Any]:
     """Reconstructs a comprehensive meter dashboard object from MySQL records."""
     meter_id = meter.meter_id
-    online = ml_engine.get_meter_online_status(meter_id)
 
     # 1. Latest Hardware Reading from MySQL
     latest_hw = (
@@ -40,6 +39,35 @@ def build_meter_payload_from_db(meter: Meter, db: Session) -> Dict[str, Any]:
         .order_by(ConsumptionSequence.analyzed_at.desc())
         .first()
     )
+
+    # Connection state evaluation (ONLINE, STALE, OFFLINE)
+    conn_info = ml_engine.get_meter_connection_info(meter_id)
+    online = conn_info["online"]
+    connection_state = conn_info["connection_state"]
+    last_seen_seconds = conn_info["last_seen_seconds"]
+    last_seen = conn_info["last_seen"]
+
+    if connection_state == "OFFLINE":
+        ref_time = None
+        if latest_hw and latest_hw.timestamp:
+            ref_time = latest_hw.timestamp
+        elif meter.last_seen:
+            ref_time = meter.last_seen
+
+        if ref_time:
+            now_utc = datetime.utcnow()
+            diff = (now_utc - ref_time).total_seconds()
+            if diff <= 10:
+                online = True
+                connection_state = "ONLINE"
+            elif diff <= 60:
+                online = False
+                connection_state = "STALE"
+            else:
+                online = False
+                connection_state = "OFFLINE"
+            last_seen_seconds = round(diff, 1)
+            last_seen = ref_time.isoformat()
 
     # 3. Recent readings history from MySQL (up to 60 readings)
     recent_readings = (
@@ -102,15 +130,48 @@ def build_meter_payload_from_db(meter: Meter, db: Session) -> Dict[str, Any]:
                 "threshold": None,
             }
 
-    # Model 1 & 2 cached details (or populated from latest DB reading)
+    # Reconstruct authentic consumption sequence history from MySQL
+    consumption_history = None
+    if latest_seq and latest_seq.consumption_json:
+        try:
+            raw_seq = json.loads(latest_seq.consumption_json)
+            if isinstance(raw_seq, list):
+                consumption_history = [round(float(v), 3) for v in raw_seq]
+        except Exception:
+            pass
+
+    # Model 1 cached details (or evaluated from actual DB 30-day sequence)
     cached_m1 = ml_engine.latest_meter_data.get(meter_id, {}).get("model1")
-    model1 = cached_m1 or {
-        "prediction": latest_hw.model1_status if latest_hw else "WAITING",
-        "raw_prediction": None,
-        "history_length": len(ml_engine.meter_history[meter_id]),
-        "features": None,
-        "consumption_history": None,
-    }
+    if cached_m1 and cached_m1.get("prediction") in ["NORMAL", "SUSPICIOUS"]:
+        model1 = cached_m1
+        if not consumption_history and cached_m1.get("consumption_history"):
+            consumption_history = cached_m1.get("consumption_history")
+    elif consumption_history and len(consumption_history) == 30:
+        m1_eval = ml_engine.evaluate_consumption_with_model1(consumption_history)
+        if m1_eval:
+            model1 = m1_eval
+        else:
+            hist_len = len(ml_engine.meter_history[meter_id])
+            pred_state = "WAITING FOR DATA" if hist_len == 0 else "INSUFFICIENT HISTORY"
+            model1 = {
+                "prediction": pred_state,
+                "raw_prediction": None,
+                "history_length": hist_len,
+                "required_length": 30,
+                "features": None,
+                "consumption_history": consumption_history,
+            }
+    else:
+        hist_len = len(ml_engine.meter_history[meter_id])
+        pred_state = "WAITING FOR DATA" if hist_len == 0 else "INSUFFICIENT HISTORY"
+        model1 = cached_m1 or {
+            "prediction": pred_state,
+            "raw_prediction": None,
+            "history_length": hist_len,
+            "required_length": 30,
+            "features": None,
+            "consumption_history": None,
+        }
 
     cached_m2 = ml_engine.latest_meter_data.get(meter_id, {}).get("model2")
     model2 = cached_m2 or {
@@ -139,6 +200,10 @@ def build_meter_payload_from_db(meter: Meter, db: Session) -> Dict[str, Any]:
         "meter_id": meter_id,
         "server_time": datetime.now().isoformat(),
         "online": online,
+        "connection_state": connection_state,
+        "last_seen_seconds": last_seen_seconds,
+        "last_seen": last_seen,
+        "is_simulated": meter_id.startswith("M_SIM") or (latest_seq.is_simulated if latest_seq else False),
         "location": {
             "name": meter.location_name or meter_id,
             "latitude": meter.latitude,
@@ -147,6 +212,7 @@ def build_meter_payload_from_db(meter: Meter, db: Session) -> Dict[str, Any]:
         "electrical": electrical,
         "readings": readings,
         "live_history": live_history or list(ml_engine.live_electrical_history[meter_id]),
+        "consumption_history": consumption_history,
         "model1": model1,
         "model2": model2,
         "lstm": lstm,
@@ -211,6 +277,8 @@ def get_meters():
                             {
                                 "meter_id": m.meter_id,
                                 "online": ml_engine.get_meter_online_status(m.meter_id),
+                                "connection_state": ml_engine.get_meter_connection_info(m.meter_id)["connection_state"],
+                                "is_simulated": m.meter_id.startswith("M_SIM"),
                                 "location": {
                                     "name": m.location_name or m.meter_id,
                                     "latitude": m.latitude,
