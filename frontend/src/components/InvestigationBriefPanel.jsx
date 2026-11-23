@@ -23,6 +23,15 @@ export default function InvestigationBriefPanel({
 }) {
   const [reports, setReports] = useState([]);
   const [selectedReportId, setSelectedReportId] = useState(null);
+  const [prevSimReport, setPrevSimReport] = useState(latestReportFromSimulation);
+
+  // Synchronize state with new simulation report during render (standard React pattern)
+  if (latestReportFromSimulation !== prevSimReport) {
+    setPrevSimReport(latestReportFromSimulation);
+    if (latestReportFromSimulation && latestReportFromSimulation.meter_id === selectedMeterId) {
+      setSelectedReportId(latestReportFromSimulation.id);
+    }
+  }
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
@@ -63,6 +72,10 @@ export default function InvestigationBriefPanel({
       isMounted = false;
     };
   }, [selectedMeterId]);
+
+
+
+  const isGeminiModel = (model) => Boolean(model && model.toLowerCase().includes("gemini"));
 
   const displayReports = useMemo(() => {
     if (!latestReportFromSimulation || latestReportFromSimulation.meter_id !== selectedMeterId) {
@@ -176,7 +189,7 @@ export default function InvestigationBriefPanel({
           </div>
           <div>
             <h2>Forensic Investigation Brief</h2>
-            <p>Evidence-grounded utility tampering analysis (Gemini 2.5 Flash / Evidence Engine)</p>
+            <p>Evidence-grounded utility tampering analysis (Forensic Evidence Engine)</p>
           </div>
         </div>
 
@@ -197,7 +210,7 @@ export default function InvestigationBriefPanel({
             >
               {displayReports.map((r) => (
                 <option key={r.id} value={r.id}>
-                  Report #{r.id} • {r.model_used === "gemini-2.5-flash" ? "Gemini" : "Fallback"} •{" "}
+                  Report #{r.id} • {isGeminiModel(r.model_used) ? r.model_used : "Deterministic Fallback"} •{" "}
                   {r.created_at ? new Date(r.created_at).toLocaleTimeString() : "Recent"}
                 </option>
               ))}
@@ -302,22 +315,46 @@ export default function InvestigationBriefPanel({
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
               <span
                 style={{
-                  background:
-                    activeReport.model_used === "gemini-2.5-flash"
-                      ? "rgba(34, 197, 94, 0.2)"
-                      : "rgba(56, 189, 248, 0.15)",
+                  background: isGeminiModel(activeReport.model_used)
+                    ? "rgba(34, 197, 94, 0.2)"
+                    : "rgba(56, 189, 248, 0.15)",
                   border: `1px solid ${
-                    activeReport.model_used === "gemini-2.5-flash" ? "var(--green)" : "#38BDF8"
+                    isGeminiModel(activeReport.model_used) ? "var(--green)" : "#38BDF8"
                   }`,
-                  color: activeReport.model_used === "gemini-2.5-flash" ? "#4ADE80" : "#38BDF8",
+                  color: isGeminiModel(activeReport.model_used) ? "#4ADE80" : "#38BDF8",
                   padding: "3px 10px",
                   borderRadius: "16px",
                   fontWeight: "700",
                   fontSize: "0.75rem",
                 }}
               >
-                ● {activeReport.model_used.toUpperCase()}
+                ● {isGeminiModel(activeReport.model_used) ? activeReport.model_used.toUpperCase() : "DETERMINISTIC FALLBACK"}
               </span>
+
+              {/* DATA SOURCE BADGE */}
+              {(() => {
+                const ev = activeReport.evidence || {};
+                const isSim = ev?.consumption?.is_simulated || activeReport.meter_id?.startsWith("M_SIM");
+                const scenario = ev?.consumption?.scenario;
+                const sourceBadge = isSim
+                  ? (scenario ? `SIMULATOR BENCH (${scenario.toUpperCase()})` : "DATASET REPLAY")
+                  : (ev?.hardware?.t1_cs !== undefined ? "HARDWARE REPLAY STREAM" : "STORED INVESTIGATION");
+                return (
+                  <span
+                    style={{
+                      background: "rgba(139, 94, 60, 0.25)",
+                      border: "1px solid var(--brown)",
+                      color: "var(--cream)",
+                      padding: "3px 10px",
+                      borderRadius: "16px",
+                      fontWeight: "700",
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    SOURCE: {sourceBadge}
+                  </span>
+                );
+              })()}
 
               <span style={{ color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: "4px" }}>
                 <Clock size={13} />
@@ -327,6 +364,18 @@ export default function InvestigationBriefPanel({
               <span style={{ color: "var(--cream)" }}>
                 Meter ID: <strong>{activeReport.meter_id}</strong>
               </span>
+
+              {activeReport.sequence_id && (
+                <span style={{ color: "var(--sage)" }}>
+                  Sequence: <strong>#{activeReport.sequence_id}</strong>
+                </span>
+              )}
+
+              {activeReport.alert_id && (
+                <span style={{ color: "#FCD34D" }}>
+                  Alert: <strong>#{activeReport.alert_id}</strong>
+                </span>
+              )}
             </div>
 
             <span

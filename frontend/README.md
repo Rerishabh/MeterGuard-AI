@@ -1,16 +1,54 @@
-# React + Vite
+# MeterGuard AI: Frontend Web Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The frontend for **MeterGuard AI** is a real-time utility monitoring dashboard built with React 19, Vite 8, Recharts, and Lucide React.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 1. Application Architecture
 
-## React Compiler
+The UI is structured around **four primary operational sections** and a persistent slide-in Settings drawer:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **Dashboard (`DashboardPage.jsx`):** High-level grid operations overview, summary metric cards, and the real-time **Account Investigation Priority Queue** (ranking accounts by `CRITICAL`, `HIGH`, `MEDIUM`, `LOW` priority).
+2. **AI Detection (`AiDetectionPage.jsx`):** Multi-model detection status cards (Isolation Forest, Random Forest, Daily LSTM, Hourly LSTM) and the interactive **Tampering Simulator** card.
+3. **Live Telemetry (`LiveMonitoringPage.jsx`):** High-frequency line charts plotting real-time Transformer 1 ($T_1$), Pole Transformer ($T_2$), and Consumer ($H_1$) current, voltage, and power waveforms.
+4. **Alerts & Logs (`AlertsLogsPage.jsx`):** Audited incident history displaying confirmed hardware faults and consumption sequence anomalies with full taxonomy labels (`SIMULATED_...`, `FAULT_...`) and status filtering.
+5. **Settings Drawer (`SettingsPage.jsx`):** Slide-in panel accessed via the sidebar footer gear icon (`⚙`) for MySQL connection status, polling interval adjustment, and background simulation management.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 2. Getting Started
+
+### Prerequisites
+- Node.js v18.0.0 or higher (v20+ recommended)
+- npm v9+
+
+### Installation
+```bash
+# From within the frontend/ directory:
+npm install
+```
+
+### Development Server
+```bash
+npm run dev
+```
+The application will launch at `http://localhost:5173`. By default, it communicates with the FastAPI backend at `http://localhost:5000`.
+
+### Production Build & Linting
+```bash
+# Run ESLint verification (must report 0 errors)
+npm run lint
+
+# Compile production bundle
+npm run build
+```
+Build outputs are written to `frontend/dist/`.
+
+---
+
+## 3. Configuration
+
+Environment variables can be customized in `.env` (or via Vite proxy):
+```ini
+VITE_API_URL=http://localhost:5000
+```

@@ -1,0 +1,9 @@
+# MeterGuard AI Application Screenshots Directory
+# Expected files:
+# - dashboard.png (Dashboard & Priority Queue)
+# - ai-detection.png (AI Detection & Tamper Simulator)
+# - live-simulation.png (Live Telemetry Load Curves)
+# - alerts-and-logs.png (Alerts & Audit Logs Table)
+# Optional:
+# - investigation-report.png (Investigation Brief modal/drawer)
+# - settings.png (Settings slide-in drawer)

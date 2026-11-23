@@ -4,24 +4,19 @@ import MeterLogo from "./components/MeterLogo";
 import DashboardPage from "./pages/DashboardPage";
 import LiveMonitoringPage from "./pages/LiveMonitoringPage";
 import AiDetectionPage from "./pages/AiDetectionPage";
-import MeterLocationsPage from "./pages/MeterLocationsPage";
-import MeterNetworkPage from "./pages/MeterNetworkPage";
 import AlertsLogsPage from "./pages/AlertsLogsPage";
 import SettingsPage from "./pages/SettingsPage";
 import { fetchDashboard, fetchHealth } from "./services/api";
-import { Activity } from "lucide-react";
+import { Activity, X } from "lucide-react";
 import "./App.css";
 
-const backgroundImage = "/background.jpg";
+const backgroundImage = "/tower-background.webp";
 
 const VALID_TABS = [
   "dashboard",
   "live-monitoring",
   "ai-detection",
-  "meter-locations",
-  "meter-network",
   "alerts-logs",
-  "settings",
 ];
 
 function getTabFromHash() {
@@ -36,6 +31,7 @@ function App() {
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [currentTab, setCurrentTab] = useState(getTabFromHash);
+  const [showSettings, setShowSettings] = useState(false);
   const [pollingInterval, setPollingInterval] = useState(() => {
     return Number(localStorage.getItem("meterguard_interval")) || 1000;
   });
@@ -43,7 +39,9 @@ function App() {
   // Keep navigation in sync with browser URL hash
   useEffect(() => {
     const onHashChange = () => {
-      setCurrentTab(getTabFromHash());
+      const tab = getTabFromHash();
+      setCurrentTab(tab);
+      setShowSettings(false);
     };
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
@@ -51,7 +49,16 @@ function App() {
 
   const handleTabChange = useCallback((tabId) => {
     setCurrentTab(tabId);
+    setShowSettings(false);
     window.location.hash = `#/${tabId}`;
+  }, []);
+
+  const handleOpenSettings = useCallback(() => {
+    setShowSettings(true);
+  }, []);
+
+  const handleCloseSettings = useCallback(() => {
+    setShowSettings(false);
   }, []);
 
   // Poll dashboard telemetry
@@ -98,8 +105,8 @@ function App() {
   }, [pollingInterval]);
 
   const renderContent = () => {
-    // If backend is not connected and user is not on settings, show loading screen
-    if (!dashboard && currentTab !== "settings") {
+    // If backend is not connected and settings not open, show loading screen
+    if (!dashboard && !showSettings) {
       return (
         <main className="main" style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh" }}>
           <div className="loading-card" style={{ maxWidth: "440px", textAlign: "center" }}>
@@ -124,7 +131,7 @@ function App() {
             <div style={{ marginTop: "16px" }}>
               <button
                 type="button"
-                onClick={() => handleTabChange("settings")}
+                onClick={handleOpenSettings}
                 style={{
                   background: "rgba(10, 41, 71, 0.8)",
                   border: "1px solid rgba(211, 212, 192, 0.3)",
@@ -162,24 +169,6 @@ function App() {
             lastUpdate={lastUpdate}
           />
         );
-      case "meter-locations":
-        return (
-          <MeterLocationsPage
-            dashboard={dashboard}
-            selectedMeter={selectedMeter}
-            setSelectedMeter={setSelectedMeter}
-            lastUpdate={lastUpdate}
-          />
-        );
-      case "meter-network":
-        return (
-          <MeterNetworkPage
-            dashboard={dashboard}
-            selectedMeter={selectedMeter}
-            setSelectedMeter={setSelectedMeter}
-            lastUpdate={lastUpdate}
-          />
-        );
       case "alerts-logs":
         return (
           <AlertsLogsPage
@@ -187,14 +176,6 @@ function App() {
             selectedMeter={selectedMeter}
             setSelectedMeter={setSelectedMeter}
             lastUpdate={lastUpdate}
-          />
-        );
-      case "settings":
-        return (
-          <SettingsPage
-            lastUpdate={lastUpdate}
-            pollingInterval={pollingInterval}
-            setPollingInterval={setPollingInterval}
           />
         );
       case "dashboard":
@@ -224,12 +205,73 @@ function App() {
       <Sidebar
         currentTab={currentTab}
         onSelectTab={handleTabChange}
+        onOpenSettings={handleOpenSettings}
         health={health}
         isBackendOnline={Boolean(dashboard)}
       />
 
       {/* ACTIVE PAGE CONTENT */}
       {renderContent()}
+
+      {/* SETTINGS OVERLAY PANEL */}
+      {showSettings && (
+        <div className="settings-overlay">
+          {/* Backdrop */}
+          <div
+            className="settings-backdrop"
+            onClick={handleCloseSettings}
+            title="Click to close settings"
+          />
+
+          {/* Settings Drawer Panel */}
+          <div className="settings-drawer">
+            {/* Panel close header */}
+            <div className="settings-drawer-header">
+              <span style={{ color: "var(--cream)", fontWeight: 700, fontSize: "1.05rem", letterSpacing: "0.5px" }}>
+                System Settings
+              </span>
+              <button
+                type="button"
+                onClick={handleCloseSettings}
+                style={{
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(211,212,192,0.22)",
+                  borderRadius: "6px",
+                  color: "var(--cream)",
+                  cursor: "pointer",
+                  padding: "5px 12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  transition: "background 0.2s, border-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(239,68,68,0.2)";
+                  e.currentTarget.style.borderColor = "rgba(239,68,68,0.45)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                  e.currentTarget.style.borderColor = "rgba(211,212,192,0.22)";
+                }}
+              >
+                <X size={15} />
+                Close
+              </button>
+            </div>
+
+            {/* Scrollable Content Body */}
+            <div className="settings-drawer-body">
+              <SettingsPage
+                lastUpdate={lastUpdate}
+                pollingInterval={pollingInterval}
+                setPollingInterval={setPollingInterval}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -286,7 +286,8 @@ def run_actual_persistence_tests():
         assert r_single.status_code == 200
         single_data = r_single.json()
         assert single_data["meter_id"] == "M_TEST_01"
-        assert single_data["electrical"]["voltage_V"] == 230.1
+        assert single_data["electrical"]["voltage_V"] == 230.0
+        assert single_data["readings"]["H1_VS"] == 230.1
         print(f"   [VERIFIED IN MYSQL] GET /api/meter/M_TEST_01 retrieved from MySQL records (voltage={single_data['electrical']['voltage_V']} V).")
 
         r_alerts = client.get("/api/alerts")

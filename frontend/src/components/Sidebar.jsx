@@ -2,8 +2,6 @@ import {
   Gauge,
   Activity,
   ShieldCheck,
-  MapPin,
-  Network,
   Bell,
   Settings,
 } from "lucide-react";
@@ -11,22 +9,20 @@ import MeterLogo from "./MeterLogo";
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: Gauge },
-  { id: "live-monitoring", label: "Live Monitoring", icon: Activity },
   { id: "ai-detection", label: "AI Detection", icon: ShieldCheck },
-  { id: "meter-locations", label: "Meter Locations", icon: MapPin },
-  { id: "meter-network", label: "Meter Network", icon: Network },
+  { id: "live-monitoring", label: "Live Telemetry", icon: Activity },
   { id: "alerts-logs", label: "Alerts & Logs", icon: Bell },
-  { id: "settings", label: "Settings", icon: Settings },
 ];
 
 export default function Sidebar({
   currentTab = "dashboard",
   onSelectTab,
+  onOpenSettings,
   health = null,
   isBackendOnline = true,
 }) {
   return (
-    <aside className="sidebar" style={{ userSelect: "none", WebkitUserSelect: "none" }}>
+    <aside className="sidebar" style={{ userSelect: "none", WebkitUserSelect: "none", display: "flex", flexDirection: "column" }}>
       <div
         className="brand"
         style={{
@@ -77,7 +73,7 @@ export default function Sidebar({
         </div>
       </div>
 
-      <nav className="sidebar-nav" aria-label="Main Navigation">
+      <nav className="sidebar-nav" aria-label="Main Navigation" style={{ flex: 1 }}>
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive = currentTab === item.id;
@@ -145,6 +141,42 @@ export default function Sidebar({
               : "FastAPI • MySQL Connected"}
           </div>
         </div>
+
+        {/* Settings gear icon */}
+        <button
+          type="button"
+          onClick={() => onOpenSettings && onOpenSettings()}
+          title="System Settings"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            width: "100%",
+            background: "transparent",
+            border: "none",
+            borderTop: "1px solid rgba(211,212,192,0.1)",
+            padding: "10px 16px",
+            cursor: "pointer",
+            color: "var(--sage)",
+            fontFamily: "inherit",
+            fontSize: "0.78rem",
+            fontWeight: 500,
+            letterSpacing: "0.5px",
+            textAlign: "left",
+            transition: "color 0.2s, background 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(211,212,192,0.07)";
+            e.currentTarget.style.color = "var(--cream)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.color = "var(--sage)";
+          }}
+        >
+          <Settings size={16} />
+          <span>Settings</span>
+        </button>
 
         <div className="sidebar-footer-text">
           MeterGuard AI Monitoring v1.0

@@ -20,6 +20,7 @@ logger = logging.getLogger("meterguard.anomaly")
 router = APIRouter(tags=["Anomaly"])
 
 
+@router.post("/api/evaluate-sequence")
 @router.post("/api/anomaly/analyze")
 async def analyze_anomaly(request: Request):
     """
@@ -166,23 +167,55 @@ def persist_sequence_to_db(
             )
             db.add(seq_record)
 
-            # If anomaly, create alert
+            # If anomaly, create alert (with deduplication)
+            source_model = "Daily_LSTM_AE" if sequence_type == "daily" else "Hourly_LSTM_AE"
             if result.get("is_anomaly"):
-                source_model = "Daily_LSTM_AE" if sequence_type == "daily" else "Hourly_LSTM_AE"
                 error = result.get("reconstruction_error", 0.0)
                 thresh_99 = result.get("threshold_99", 0.0)
                 severity = "HIGH" if (thresh_99 and error >= thresh_99) else "MEDIUM"
 
-                alert = AnomalyAlert(
-                    meter_id=meter_id,
-                    source_model=source_model,
-                    fault_type="CONSUMPTION_ANOMALY",
-                    severity=severity,
-                    message=f"{sequence_type.capitalize()} consumption anomaly detected (MSE: {error}, threshold: {result.get('threshold')}).",
-                    is_resolved=False,
-                    created_at=now,
+                existing_alert = (
+                    db.query(AnomalyAlert)
+                    .filter(
+                        AnomalyAlert.meter_id == meter_id,
+                        AnomalyAlert.source_model == source_model,
+                        AnomalyAlert.fault_type == "CONSUMPTION_ANOMALY",
+                        AnomalyAlert.is_resolved == False,  # noqa: E712
+                    )
+                    .first()
                 )
-                db.add(alert)
+
+                if existing_alert:
+                    existing_alert.message = (
+                        f"{sequence_type.capitalize()} consumption anomaly detected "
+                        f"(MSE: {error}, threshold: {result.get('threshold')})."
+                    )
+                    existing_alert.severity = severity
+                else:
+                    alert = AnomalyAlert(
+                        meter_id=meter_id,
+                        source_model=source_model,
+                        fault_type="CONSUMPTION_ANOMALY",
+                        severity=severity,
+                        message=f"{sequence_type.capitalize()} consumption anomaly detected (MSE: {error}, threshold: {result.get('threshold')}).",
+                        is_resolved=False,
+                        created_at=now,
+                    )
+                    db.add(alert)
+            elif result.get("status") == "NORMAL" and not result.get("is_anomaly"):
+                # Auto-resolve only this sequence model's open alerts for this meter
+                open_seq_alerts = (
+                    db.query(AnomalyAlert)
+                    .filter(
+                        AnomalyAlert.meter_id == meter_id,
+                        AnomalyAlert.source_model == source_model,
+                        AnomalyAlert.fault_type == "CONSUMPTION_ANOMALY",
+                        AnomalyAlert.is_resolved == False,  # noqa: E712
+                    )
+                    .all()
+                )
+                for alert in open_seq_alerts:
+                    alert.is_resolved = True
 
             db.commit()
         except Exception as exc:

@@ -18,6 +18,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from backend.app.config import settings
 from backend.app.services.ml_engine import ml_engine
+from backend.app.services.simulation_service import simulation_manager
 from backend.database.session import check_db_connection
 from backend.app.routes import (
     health_router,
@@ -25,6 +26,7 @@ from backend.app.routes import (
     anomaly_router,
     dashboard_router,
     reports_router,
+    simulation_router,
 )
 
 
@@ -32,7 +34,8 @@ from backend.app.routes import (
 async def lifespan(app: FastAPI):
     """
     Application lifespan manager.
-    Initializes ML models and verifies database connectivity on startup.
+    Initializes ML models, verifies database connectivity, and starts
+    the default automatic dataset replay simulation worker.
     """
     print("\n==========================================")
     print("   METERGUARD AI FASTAPI SERVER STARTUP   ")
@@ -49,10 +52,16 @@ async def lifespan(app: FastAPI):
         print("[DATABASE WARNING] MySQL connectivity check failed:", db_err)
         print("                 API will continue running; DB operations will fail gracefully.")
 
+    # 3. Automatically start managed background dataset simulation
+    await simulation_manager.start_default_simulation()
+    print("[SIMULATION] Background dataset replay worker initialized automatically.")
+
     print(f"[FASTAPI] Listening on http://{settings.API_HOST}:{settings.API_PORT}")
     print("==========================================\n")
     yield
     print("\n[FASTAPI] MeterGuard AI server shutting down cleanly.")
+    await simulation_manager.stop_simulation()
+    print("[SIMULATION] Background simulation worker cleanly stopped.")
 
 
 app = FastAPI(
@@ -77,6 +86,7 @@ app.include_router(telemetry_router)
 app.include_router(anomaly_router)
 app.include_router(dashboard_router)
 app.include_router(reports_router)
+app.include_router(simulation_router)
 
 
 if __name__ == "__main__":

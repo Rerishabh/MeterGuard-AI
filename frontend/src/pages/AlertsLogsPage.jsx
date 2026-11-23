@@ -316,7 +316,7 @@ export default function AlertsLogsPage({
                       {item.meter_id}
                     </td>
                     <td style={{ padding: "12px 8px", color: "#F3E4C9", fontWeight: "600" }}>
-                      {(item.fault_type || "ANOMALY").replace("SIMULATED_", "").replace("FAULT_", "")}
+                      {item.fault_type || "ANOMALY"}
                     </td>
                     <td style={{ padding: "12px 8px", color: "var(--sage)" }}>
                       <span style={{ background: "rgba(10, 41, 71, 0.6)", padding: "2px 6px", borderRadius: "4px", fontSize: "11px" }}>

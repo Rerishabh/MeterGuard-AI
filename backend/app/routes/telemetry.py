@@ -34,22 +34,30 @@ async def receive_meter_data(request: Request):
     except Exception:
         return JSONResponse(status_code=400, content={"status": "error", "message": "No JSON data received."})
 
+    status_code, response_payload = ingest_telemetry_reading(data)
+    if status_code != 200:
+        return JSONResponse(status_code=status_code, content=response_payload)
+    return response_payload
+
+
+def ingest_telemetry_reading(data: Dict[str, Any]) -> tuple[int, Dict[str, Any]]:
+    """
+    Core telemetry processing pipeline.
+    Invoked both by HTTP POST /api/meter-data and the internal background replay simulator.
+    """
     if not data or not isinstance(data, dict):
-        return JSONResponse(status_code=400, content={"status": "error", "message": "No JSON data received."})
+        return 400, {"status": "error", "message": "No JSON data received."}
 
     meter_id = str(data.get("meter_id", "M001"))
 
     required_fields = ["T1_CS", "T1_VS", "T2_CS", "T2_VS", "H1_CS", "H1_VS"]
     missing = [f for f in required_fields if f not in data]
     if missing:
-        return JSONResponse(
-            status_code=400,
-            content={
-                "status": "error",
-                "message": "Missing sensor values.",
-                "missing": missing,
-            },
-        )
+        return 400, {
+            "status": "error",
+            "message": "Missing sensor values.",
+            "missing": missing,
+        }
 
     try:
         t1_cs = float(data["T1_CS"])
@@ -59,10 +67,7 @@ async def receive_meter_data(request: Request):
         h1_cs = float(data["H1_CS"])
         h1_vs = float(data["H1_VS"])
     except (ValueError, TypeError) as exc:
-        return JSONResponse(
-            status_code=400,
-            content={"status": "error", "message": f"Sensor values must be numeric: {exc}"},
-        )
+        return 400, {"status": "error", "message": f"Sensor values must be numeric: {exc}"}
 
     now = datetime.now()
     ml_engine.meter_last_seen[meter_id] = now
@@ -179,6 +184,8 @@ async def receive_meter_data(request: Request):
         now=now,
     )
 
+    return 200, response_payload
+
     # Console logging matching Flask output
     print()
     print("==========================================")
@@ -271,6 +278,7 @@ def persist_telemetry_to_db(
                     db.query(AnomalyAlert)
                     .filter(
                         AnomalyAlert.meter_id == meter_id,
+                        AnomalyAlert.source_model == "RandomForest",
                         AnomalyAlert.fault_type == fault_type,
                         AnomalyAlert.is_resolved == False,  # noqa: E712
                     )
@@ -302,6 +310,7 @@ def persist_telemetry_to_db(
                     db.query(AnomalyAlert)
                     .filter(
                         AnomalyAlert.meter_id == meter_id,
+                        AnomalyAlert.source_model == "RandomForest",
                         AnomalyAlert.is_resolved == False,  # noqa: E712
                     )
                     .all()

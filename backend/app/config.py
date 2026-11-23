@@ -20,7 +20,8 @@ class Settings(BaseSettings):
     )
 
     # Database
-    DATABASE_URL: str = "mysql+pymysql://root:password@localhost:3306/meterguard_db"
+    # Database URL must be supplied through the root .env file or environment.
+    DATABASE_URL: str
 
     # API Server
     API_HOST: str = "0.0.0.0"

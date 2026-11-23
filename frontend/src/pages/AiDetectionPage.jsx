@@ -40,6 +40,8 @@ export default function AiDetectionPage({
   const lstmThreshold =
     lstm.threshold !== null && lstm.threshold !== undefined
       ? Number(lstm.threshold)
+      : lstm.sequence_type === "hourly"
+      ? 0.016575
       : 0.013009;
 
   const finalStatus = decision.final_status || "MONITORING";
@@ -315,7 +317,7 @@ export default function AiDetectionPage({
       {/* FOOTER */}
       <footer>
         <span>MeterGuard AI • Multi-Model Anomaly Arbitration</span>
-        <span>Isolation Forest • Random Forest • LSTM Autoencoder • Gemini 3.8 Flash</span>
+        <span>Isolation Forest • Random Forest • LSTM Autoencoder • Forensic Evidence Engine</span>
       </footer>
     </main>
   );

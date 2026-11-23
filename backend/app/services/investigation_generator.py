@@ -230,7 +230,12 @@ class InvestigationGenerator:
         severity = a["severity"] if a else ("HIGH" if priority in ["HIGH", "CRITICAL"] else "MEDIUM" if priority == "MEDIUM" else "LOW")
         source_model = a["source_model"] if a else ("LSTM_Autoencoder" if c and c.get("is_anomaly") else "RandomForest" if h and h.get("model2_status") not in ["NORMAL", None] else "IsolationForest")
         is_sim = (c.get("is_simulated", False) if c else False)
-        sim_badge = "SIMULATED DATASET" if is_sim else "LIVE TELEMETRY"
+        if is_sim:
+            sim_badge = "SIMULATED DATASET"
+        elif h and h.get("t1_cs") is not None:
+            sim_badge = "HARDWARE REPLAY STREAM"
+        else:
+            sim_badge = "STORED SIMULATION"
         scenario_note = f" (Scenario: `{c.get('scenario')}`)" if c and c.get("scenario") else ""
 
         # Main finding - strictly ground on actual sequence and hardware evidence

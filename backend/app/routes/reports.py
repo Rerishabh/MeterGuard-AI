@@ -81,6 +81,7 @@ def generate_investigation_report(payload: ReportGenerateRequest):
                 "id": report.id,
                 "meter_id": report.meter_id,
                 "alert_id": report.alert_id,
+                "sequence_id": payload.sequence_id or (evidence_dict.get("consumption", {}).get("sequence_id") if evidence_dict else None),
                 "model_used": report.model_used,
                 "created_at": report.created_at.isoformat() if report.created_at else None,
                 "report_markdown": report.report_markdown,
@@ -124,6 +125,7 @@ def get_meter_reports(meter_id: str):
                 "id": r.id,
                 "meter_id": r.meter_id,
                 "alert_id": r.alert_id,
+                "sequence_id": ev.get("consumption", {}).get("sequence_id") if ev else None,
                 "model_used": r.model_used,
                 "created_at": r.created_at.isoformat() if r.created_at else None,
                 "report_markdown": r.report_markdown,
@@ -175,6 +177,7 @@ def get_recent_reports(limit: int = Query(default=20, ge=1, le=100)):
         db.close()
 
 
+@router.post("/api/simulate-tampering")
 @router.post("/api/simulate/tamper")
 def simulate_tampering(payload: SimulateTamperRequest):
     """
@@ -278,6 +281,7 @@ def simulate_tampering(payload: SimulateTamperRequest):
                 .filter(
                     AnomalyAlert.meter_id == meter_id,
                     AnomalyAlert.source_model == "LSTM_Autoencoder",
+                    AnomalyAlert.fault_type == fault_tag,
                     AnomalyAlert.is_resolved == False,  # noqa: E712
                 )
                 .first()
@@ -315,7 +319,7 @@ def simulate_tampering(payload: SimulateTamperRequest):
                 "message": alert_obj.message,
                 "is_resolved": alert_obj.is_resolved,
             }
-        else:
+        elif scenario == "normal":
             # If simulated normal, resolve any lingering active simulated LSTM alerts
             existing_sim_alerts = (
                 db.query(AnomalyAlert)
@@ -353,13 +357,21 @@ def simulate_tampering(payload: SimulateTamperRequest):
                 sequence_id=seq_record.id,
             )
             if report_obj:
+                ev_data = None
+                if report_obj.evidence_json:
+                    try:
+                        ev_data = json.loads(report_obj.evidence_json)
+                    except Exception:
+                        pass
                 report_info = {
                     "id": report_obj.id,
                     "meter_id": report_obj.meter_id,
                     "alert_id": report_obj.alert_id,
+                    "sequence_id": seq_record.id,
                     "model_used": report_obj.model_used,
                     "created_at": report_obj.created_at.isoformat() if report_obj.created_at else None,
                     "report_markdown": report_obj.report_markdown,
+                    "evidence": ev_data,
                 }
 
         return {

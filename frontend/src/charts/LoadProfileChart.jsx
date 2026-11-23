@@ -10,7 +10,7 @@ import {
 } from "recharts";
 
 export default function LoadProfileChart({ consumptionData = [] }) {
-  const hasData = Array.isArray(consumptionData) && consumptionData.length > 0;
+  const hasData = Array.isArray(consumptionData) && consumptionData.length >= 30;
 
   return (
     <section className="panel consumption-panel">
@@ -64,7 +64,7 @@ export default function LoadProfileChart({ consumptionData = [] }) {
           >
             <Clock size={36} color="var(--sage)" style={{ marginBottom: "12px" }} />
             <strong style={{ color: "var(--cream)", fontSize: "14px", marginBottom: "6px" }}>
-              Awaiting 30-Day Daily Consumption Sequence
+              Awaiting 30-day consumption history
             </strong>
             <p style={{ color: "var(--sage)", fontSize: "12px", maxWidth: "440px", margin: 0, lineHeight: "1.5" }}>
               Model 1 (Isolation Forest) requires 30 daily kWh observations to construct statistical baseline features (mean, median, trend, spike ratio). Ingest a sequence via the Tampering Simulator or streaming telemetry to display the load profile.
