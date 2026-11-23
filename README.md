@@ -189,7 +189,7 @@ copy .env.example .env     # Windows
 
 Review `.env` and verify database credentials:
 ```ini
-DATABASE_URL=mysql+pymysql://root:password@localhost:3306/meterguard_ai
+DATABASE_URL=mysql+pymysql://YOUR_DB_USER:YOUR_DB_PASSWORD@localhost:3306/meterguard_ai
 API_HOST=127.0.0.1
 API_PORT=5000
 VITE_API_URL=http://localhost:5000
