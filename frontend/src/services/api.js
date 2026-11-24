@@ -2,8 +2,9 @@
  * MeterGuard AI - Centralized API Service
  */
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"
+).replace(/\/+$/, "");
 
 export async function fetchDashboard() {
   const response = await fetch(`${API_BASE_URL}/api/dashboard`);

@@ -19,13 +19,16 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # Database
-    # Database URL must be supplied through the root .env file or environment.
+    # Database: strictly required via environment variable or .env file.
     DATABASE_URL: str
 
-    # API Server
+    # API Server & Port Binding (Render injects PORT, local fallback API_PORT)
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 5000
+    PORT: int | None = None
+
+    # Configurable CORS Origins (comma-separated origins, e.g. 'https://meterguard-ai.pages.dev')
+    CORS_ORIGINS: str = ""
 
     # ML Artifacts (relative to PROJECT_ROOT or absolute)
     MODEL1_PATH: str = "models/isolation_forest_final.joblib"
@@ -35,6 +38,10 @@ class Settings(BaseSettings):
     # Phase 3B: Gemini GenAI Configuration
     GEMINI_API_KEY: str | None = None
     GEMINI_MODEL: str = "gemini-3.8-flash"
+
+    @property
+    def effective_port(self) -> int:
+        return self.PORT if self.PORT is not None else self.API_PORT
 
     def get_model1_path(self) -> Path:
         p = Path(self.MODEL1_PATH)

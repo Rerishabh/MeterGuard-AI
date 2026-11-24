@@ -16,7 +16,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from backend.app.config import settings
 from backend.database.base import Base
-from backend.database.session import engine as app_engine
+from backend.database.session import engine as app_engine, connect_args as db_connect_args
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -69,6 +69,7 @@ def run_migrations_online() -> None:
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=db_connect_args,
     )
 
     with connectable.connect() as connection:
